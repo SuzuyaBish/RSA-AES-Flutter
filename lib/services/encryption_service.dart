@@ -36,11 +36,11 @@ class EncryptionService {
     return <String>[pathWithoutDotAes, fileNameWithoutDotAes];
   }
 
-  void aesEncrypt(String filePath) {
+  void aesEncrypt(String filePath, String password) {
     String srcFilePath = filePath;
 
     var crypt = AesCrypt();
-    crypt.setPassword("123");
+    crypt.setPassword(password);
 
     try {
       encFilePath = crypt.encryptFileSync(srcFilePath);
@@ -52,13 +52,13 @@ class EncryptionService {
     }
   }
 
-  void aesDecrypt() {
+  void aesDecrypt(String filePath, String password) {
     var crypt = AesCrypt();
-    crypt.setPassword("123");
+    crypt.setPassword(password);
 
     crypt.setOverwriteMode(AesCryptOwMode.rename);
 
-    String pathToDecrypt = getFilePath();
+    String pathToDecrypt = filePath;
 
     decFilePath = crypt.decryptFileSync(pathToDecrypt,
         withoutDotAes(pathToDecrypt)[0] + withoutDotAes(pathToDecrypt)[1]);
