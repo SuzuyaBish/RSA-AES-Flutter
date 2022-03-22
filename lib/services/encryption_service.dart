@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:aes_crypt_null_safe/aes_crypt_null_safe.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:filepicker_windows/filepicker_windows.dart';
 
 class EncryptionService {
@@ -31,19 +34,22 @@ class EncryptionService {
       }
     }
     String pathWithoutDotAes = path.substring(0, start);
+    String fileName = path.substring(start, path.length);
     String fileNameWithoutDotAes = path.substring(start, firstDot);
 
-    return <String>[pathWithoutDotAes, fileNameWithoutDotAes];
+    return <String>[pathWithoutDotAes, fileNameWithoutDotAes, fileName];
   }
 
-  void aesEncrypt(String filePath, String password) {
+  void aesEncrypt(String filePath, String password, String destinationFilePath,
+      String fileName) {
     String srcFilePath = filePath;
 
     var crypt = AesCrypt();
     crypt.setPassword(password);
 
     try {
-      encFilePath = crypt.encryptFileSync(srcFilePath);
+      encFilePath = crypt.encryptFileSync(
+          srcFilePath, destinationFilePath + "\\" + fileName);
     } on AesCryptException catch (e) {
       if (e.type == AesCryptExceptionType.destFileExists) {
         print(e.message);

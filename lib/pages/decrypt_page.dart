@@ -14,10 +14,25 @@ class _DecryptPageState extends State<DecryptPage> {
   Widget build(BuildContext context) {
     return ScaffoldPage.withPadding(
       padding: const EdgeInsets.all(30),
+      bottomBar: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          children: const [
+            Text(
+              "This program encrypts data using the AES 256 algorithm\n",
+              style: TextStyle(color: Color(0xFf808080), fontSize: 8),
+            ),
+            Text(
+              "If checked the program will use the RSA algorithm to generate keys which will be given to AES to encrypt your data",
+              style: TextStyle(color: Color(0xFf808080), fontSize: 8),
+            ),
+          ],
+        ),
+      ),
       content: Column(
         children: [
           const Text(
-            "Drag and drop or click to add files or folders",
+            "Drag and drop or press to decrypt files or folders",
             style: TextStyle(fontSize: 16),
           ),
           Row(

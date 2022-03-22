@@ -36,6 +36,7 @@ void main() async {
       await windowManager.setSkipTaskbar(false);
     });
   }
+  
   Paint.enableDithering = true;
   runApp(const MyApp());
 }
