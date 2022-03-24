@@ -100,7 +100,7 @@ class _DecryptPageState extends State<DecryptPage> {
                   ],
                 ),
                 child: Image.asset(
-                  "assets/icons/encryption.png",
+                  "assets/icons/decryptionp1.png",
                   color: const Color(0xFFf06b76),
                   scale: 5,
                 ),
