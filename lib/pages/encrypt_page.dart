@@ -1,11 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:aes_app/controllers/count.dart';
+import 'package:aes_app/controllers/requirments.dart';
 import 'package:aes_app/services/encryption_service.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:cross_file/cross_file.dart';
-import 'package:resizable_widget/resizable_widget.dart';
+import 'package:get/get.dart';
+import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:simple_ripple_animation/simple_ripple_animation.dart';
 import 'package:file_picker/file_picker.dart';
 
@@ -29,8 +32,23 @@ class _EncryptPageState extends State<EncryptPage> {
   final values = ["No", "Yes"];
   String currentDirectory = Directory.current.path;
   String tempString = "";
+  bool _useDefaultLocaiton = false;
+  int count = 0;
+  int actual = 0;
+
   TextEditingController passwordController = TextEditingController();
   TextEditingController saveController = TextEditingController();
+
+  ScrollController scrollController1 = ScrollController();
+  ScrollController scrollController2 = ScrollController();
+
+  @override
+  void initState() {
+    scrollController1;
+    scrollController2;
+
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -65,6 +83,8 @@ class _EncryptPageState extends State<EncryptPage> {
   @override
   Widget build(BuildContext context) {
     EncryptionService es = EncryptionService();
+    Requirments requirments = Get.put(Requirments());
+    CountController cc = Get.put(CountController());
     //saveController.text = directory == "" ? currentDirectory : directory;
     if (saveController.text == "" && tempString == "" && directory == "") {
       saveController.text = currentDirectory;
@@ -75,11 +95,12 @@ class _EncryptPageState extends State<EncryptPage> {
     if (saveController.text == "" && tempString == "" && directory != "") {
       saveController.text = directory;
     }
-    //return _isVisible ? EncryptWidget(es) : EncryptSummary();
-    return EncryptSummary();
+    return _isVisible ? EncryptWidget(es) : EncryptSummary(requirments, es, cc);
+    //return EncryptSummary(requirments);
   }
 
-  AnimatedOpacity EncryptSummary() {
+  AnimatedOpacity EncryptSummary(
+      Requirments requirments, EncryptionService es, CountController cc) {
     return AnimatedOpacity(
       opacity: 1,
       duration: const Duration(seconds: 1),
@@ -129,13 +150,15 @@ class _EncryptPageState extends State<EncryptPage> {
                               const SizedBox(height: 20),
                               Expanded(
                                 child: ListView.builder(
-                                  itemCount: 30,
+                                  controller: scrollController1,
+                                  itemCount: _list.length,
                                   itemBuilder:
                                       (BuildContext context, int index) {
                                     return Text(
-                                      "Index " + index.toString(),
+                                      _list[index].path,
                                       style: const TextStyle(
                                         color: Color(0xFFf06b76),
+                                        fontSize: 12,
                                       ),
                                     );
                                   },
@@ -158,7 +181,7 @@ class _EncryptPageState extends State<EncryptPage> {
                         borderRadius: BorderRadius.circular(30),
                       ),
                       child: SingleChildScrollView(
-                        controller: ScrollController(),
+                        controller: scrollController2,
                         child: Padding(
                           padding: const EdgeInsets.all(12.0),
                           child: Column(
@@ -282,6 +305,11 @@ class _EncryptPageState extends State<EncryptPage> {
                                 headerStyle: const TextStyle(
                                   color: Color(0xFFf06b76),
                                 ),
+                                onChanged: (s) {
+                                  setState(() {
+                                    passwordController.text = s;
+                                  });
+                                },
                               ),
                               const SizedBox(height: 20),
                               Divider(
@@ -301,7 +329,7 @@ class _EncryptPageState extends State<EncryptPage> {
                                   selectAll: true,
                                 ),
                                 controller: saveController,
-                                header: "Save Location:",
+                                header: "Save location:",
                                 headerStyle: const TextStyle(
                                   color: Color(0xFFf06b76),
                                 ),
@@ -337,12 +365,213 @@ class _EncryptPageState extends State<EncryptPage> {
               const SizedBox(width: 10),
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.only(top: 20, left: 20, right: 20),
                   height: MediaQuery.of(context).size.height,
                   width: MediaQuery.of(context).size.width / 2,
                   decoration: BoxDecoration(
                     color: const Color(0xFf808080).withOpacity(0.35),
                     borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.only(top: 12, left: 12, right: 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Requirements: ",
+                          style: TextStyle(
+                            fontSize: 15,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            Text(
+                              "RSA enabled: ",
+                              style: TextStyle(
+                                color: _RSAEnabled == "Yes"
+                                    ? Colors.white
+                                    : const Color(0xFFD3D3D3).withOpacity(.80),
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Icon(
+                              _RSAEnabled == "Yes"
+                                  ? FluentIcons.accept
+                                  : FluentIcons.status_circle_error_x,
+                              color: _RSAEnabled == "Yes"
+                                  ? const Color(0xFF66FF00)
+                                  : const Color(0xFFD3D3D3).withOpacity(.80),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            Text(
+                              "Password: ",
+                              style: TextStyle(
+                                color: passwordController.text.isEmpty
+                                    ? const Color(0xFFD3D3D3).withOpacity(.80)
+                                    : Colors.white,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Icon(
+                              passwordController.text.isEmpty
+                                  ? FluentIcons.status_circle_error_x
+                                  : FluentIcons.accept,
+                              color: passwordController.text.isEmpty
+                                  ? const Color(0xFFf06b76)
+                                  : const Color(0xFF66FF00),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            Text(
+                              "Save location: ",
+                              style: TextStyle(
+                                color: _useDefaultLocaiton == false &&
+                                        directory == ""
+                                    ? const Color(0xFFD3D3D3).withOpacity(.80)
+                                    : Colors.white,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Icon(
+                              _useDefaultLocaiton == false && directory == ""
+                                  ? FluentIcons.status_circle_error_x
+                                  : FluentIcons.accept,
+                              color: _useDefaultLocaiton == false &&
+                                      directory == ""
+                                  ? const Color(0xFFf06b76)
+                                  : const Color(0xFF66FF00),
+                            ),
+                            const SizedBox(width: 10),
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _useDefaultLocaiton = true;
+                                  saveController.text = currentDirectory;
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF272727),
+                                  borderRadius: BorderRadius.circular(3),
+                                ),
+                                child: const Text(
+                                  "Use default",
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFFf06b76),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 40),
+                        Center(
+                          child: Column(
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  if (passwordController.text.isNotEmpty &&
+                                      saveController.text.isNotEmpty) {
+                                    for (final i in _list) {
+                                      es.aesEncrypt(
+                                        i.path,
+                                        passwordController.text,
+                                        saveController.text,
+                                        es.withoutDotAes(i.path)[2],
+                                      );
+                                      cc.increment();
+                                    }
+                                  } else {
+                                    showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return ContentDialog(
+                                          actions: [
+                                            TextButton(
+                                              child: const Text(
+                                                "Close",
+                                                style: TextStyle(
+                                                  color: Color(0xFFf06b76),
+                                                ),
+                                              ),
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                              },
+                                            ),
+                                          ],
+                                          backgroundDismiss: true,
+                                          title: const Text(
+                                            "Error",
+                                            style: TextStyle(
+                                              color: Color(0xFFf06b76),
+                                            ),
+                                          ),
+                                          content: const Text(
+                                            "Please fill in all required fields",
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  }
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.only(
+                                    top: 10,
+                                    bottom: 10,
+                                    left: 20,
+                                    right: 20,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF272727),
+                                    borderRadius: BorderRadius.circular(3),
+                                  ),
+                                  child: const Text(
+                                    "Encrypt",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFFf06b76),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 30),
+                              Obx(
+                                () => CircularPercentIndicator(
+                                  radius: 70,
+                                  percent: cc.count / _list.length,
+                                  animation: true,
+                                  progressColor: const Color(0xFFf06b76),
+                                  backgroundColor: const Color(0xFF272727),
+                                  lineWidth: 10,
+                                  circularStrokeCap: CircularStrokeCap.round,
+                                  center: Text(
+                                    (cc.count / _list.length * 100)
+                                            .toInt()
+                                            .toString() +
+                                        "%",
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -375,51 +604,52 @@ class _EncryptPageState extends State<EncryptPage> {
           ),
         ),
         content: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text(
               "Drag and drop or press to encrypt files or folders",
               style: TextStyle(fontSize: 16),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    "Extra Security",
-                    style: TextStyle(
-                      color: Color(0xFf808080),
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                ToggleSwitch(
-                  checked: _isChecked,
-                  onChanged: (v) {
-                    setState(() {
-                      _isChecked = v;
-                    });
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.center,
+            //   children: [
+            //     const Padding(
+            //       padding: EdgeInsets.all(8.0),
+            //       child: Text(
+            //         "Extra Security",
+            //         style: TextStyle(
+            //           color: Color(0xFf808080),
+            //           fontSize: 16,
+            //         ),
+            //       ),
+            //     ),
+            //     ToggleSwitch(
+            //       checked: _isChecked,
+            //       onChanged: (v) {
+            //         setState(() {
+            //           _isChecked = v;
+            //         });
 
-                    //pickFolder();
-                  },
-                  content: Text(_isChecked ? "Yes" : "No"),
-                ),
-                const SizedBox(width: 5),
-                Tooltip(
-                  message: "Enables RSA along with AES",
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Color(0xFf808080),
-                    ),
-                    child: const Padding(
-                      padding: EdgeInsets.all(6.0),
-                      child: Text("?"),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            //         //pickFolder();
+            //       },
+            //       content: Text(_isChecked ? "Yes" : "No"),
+            //     ),
+            //     const SizedBox(width: 5),
+            //     Tooltip(
+            //       message: "Enables RSA along with AES",
+            //       child: Container(
+            //         decoration: const BoxDecoration(
+            //           shape: BoxShape.circle,
+            //           color: Color(0xFf808080),
+            //         ),
+            //         child: const Padding(
+            //           padding: EdgeInsets.all(6.0),
+            //           child: Text("?"),
+            //         ),
+            //       ),
+            //     ),
+            //   ],
+            // ),
             const SizedBox(height: 40),
             Center(
               child: DropTarget(
@@ -438,11 +668,12 @@ class _EncryptPageState extends State<EncryptPage> {
                     });
                   });
 
-                  for (final i in _list) {
-                    print(i.path);
-                    //es.aesEncrypt(i.path, "123", directory, fileName(i.path));
-                    //es.aesDecrypt(i.path, "123");
-                  }
+                  // for (final i in _list) {
+                  //   print(i.path);
+                  //   es.aesEncrypt(i.path, "123", directory, fileName(i.path));
+                  //   es.aesDecrypt(i.path, "123");
+
+                  // }
                 },
                 onDragUpdated: (details) {
                   setState(() {

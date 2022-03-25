@@ -22,7 +22,7 @@ class EncryptionService {
     int start = 0;
     int firstDot = 0;
     for (int i = path.length - 1; i >= 0; i--) {
-      if (path[i] == "/") {
+      if (path[i] == "\\") {
         start = i;
         break;
       }
