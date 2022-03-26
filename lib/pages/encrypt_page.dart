@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:path/path.dart' as Path;
 
 import 'package:aes_app/controllers/count.dart';
 import 'package:aes_app/controllers/requirments.dart';
@@ -80,6 +81,38 @@ class _EncryptPageState extends State<EncryptPage> {
     return path.substring(start);
   }
 
+  _createFolder(String savePath) async {
+    final folderName = "EncryptedFiles";
+    final path = Directory(savePath + "/" + folderName);
+
+    if ((await path.exists())) {
+      print("Path exists");
+    } else {
+      path.create();
+    }
+  }
+
+  Future<String> findFolder(String path) async {
+    var dir = Directory(path);
+    String temp = "";
+    String ret = "";
+    int count = 0;
+    var indexes = [];
+
+    await for (var entity in dir.list(recursive: true, followLinks: false)) {
+      if (entity.path.contains("EncryptedFiles")) {
+        temp = entity.path;
+      }
+    }
+
+    for (int i = 0; i < temp.length; i++) {
+      if (temp[i] == "\\") {
+        indexes.add(i);
+      }
+    }
+    return temp.substring(indexes[indexes.length - 1]);
+  }
+
   @override
   Widget build(BuildContext context) {
     EncryptionService es = EncryptionService();
@@ -96,7 +129,7 @@ class _EncryptPageState extends State<EncryptPage> {
       saveController.text = directory;
     }
     return _isVisible ? EncryptWidget(es) : EncryptSummary(requirments, es, cc);
-    //return EncryptSummary(requirments);
+    //return EncryptSummary(requirments, es, cc);
   }
 
   AnimatedOpacity EncryptSummary(
@@ -483,9 +516,11 @@ class _EncryptPageState extends State<EncryptPage> {
                           child: Column(
                             children: [
                               GestureDetector(
-                                onTap: () {
+                                onTap: () async {
                                   if (passwordController.text.isNotEmpty &&
                                       saveController.text.isNotEmpty) {
+                                    _createFolder(saveController.text);
+
                                     for (final i in _list) {
                                       es.aesEncrypt(
                                         i.path,
@@ -493,6 +528,8 @@ class _EncryptPageState extends State<EncryptPage> {
                                         saveController.text,
                                         es.withoutDotAes(i.path)[2],
                                       );
+                                      print(await findFolder(
+                                          saveController.text));
                                       cc.increment();
                                     }
                                   } else {
@@ -597,7 +634,7 @@ class _EncryptPageState extends State<EncryptPage> {
                 style: TextStyle(color: Color(0xFf808080), fontSize: 8),
               ),
               Text(
-                "If checked the program will use the RSA algorithm to generate keys which will be given to AES to encrypt your data",
+                "If specified the program will use the RSA algorithm to generate keys which will be given to AES to encrypt your data",
                 style: TextStyle(color: Color(0xFf808080), fontSize: 8),
               ),
             ],
@@ -610,47 +647,7 @@ class _EncryptPageState extends State<EncryptPage> {
               "Drag and drop or press to encrypt files or folders",
               style: TextStyle(fontSize: 16),
             ),
-            // Row(
-            //   mainAxisAlignment: MainAxisAlignment.center,
-            //   children: [
-            //     const Padding(
-            //       padding: EdgeInsets.all(8.0),
-            //       child: Text(
-            //         "Extra Security",
-            //         style: TextStyle(
-            //           color: Color(0xFf808080),
-            //           fontSize: 16,
-            //         ),
-            //       ),
-            //     ),
-            //     ToggleSwitch(
-            //       checked: _isChecked,
-            //       onChanged: (v) {
-            //         setState(() {
-            //           _isChecked = v;
-            //         });
-
-            //         //pickFolder();
-            //       },
-            //       content: Text(_isChecked ? "Yes" : "No"),
-            //     ),
-            //     const SizedBox(width: 5),
-            //     Tooltip(
-            //       message: "Enables RSA along with AES",
-            //       child: Container(
-            //         decoration: const BoxDecoration(
-            //           shape: BoxShape.circle,
-            //           color: Color(0xFf808080),
-            //         ),
-            //         child: const Padding(
-            //           padding: EdgeInsets.all(6.0),
-            //           child: Text("?"),
-            //         ),
-            //       ),
-            //     ),
-            //   ],
-            // ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 50),
             Center(
               child: DropTarget(
                 onDragDone: (detail) async {

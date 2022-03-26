@@ -48,8 +48,7 @@ class EncryptionService {
     crypt.setPassword(password);
 
     try {
-      encFilePath = crypt.encryptFileSync(
-          srcFilePath, destinationFilePath + "\\" + fileName);
+      encFilePath = crypt.encryptFileSync(srcFilePath, destinationFilePath + fileName);
     } on AesCryptException catch (e) {
       if (e.type == AesCryptExceptionType.destFileExists) {
         print(e.message);
@@ -58,15 +57,21 @@ class EncryptionService {
     }
   }
 
-  void aesDecrypt(String filePath, String password) {
+  void aesDecrypt(String filePath, String password, String destinationFilePath,
+      String fileName) {
+    String srcFilePath = filePath;
+
     var crypt = AesCrypt();
     crypt.setPassword(password);
 
-    crypt.setOverwriteMode(AesCryptOwMode.rename);
-
-    String pathToDecrypt = filePath;
-
-    decFilePath = crypt.decryptFileSync(pathToDecrypt,
-        withoutDotAes(pathToDecrypt)[0] + withoutDotAes(pathToDecrypt)[1]);
+    try {
+      decFilePath = crypt.decryptFileSync(
+          srcFilePath, destinationFilePath + 'u005C' + fileName);
+    } on AesCryptException catch (e) {
+      if (e.type == AesCryptExceptionType.destFileExists) {
+        print(e.message);
+      }
+      return;
+    }
   }
 }
