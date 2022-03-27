@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:crypton/crypton.dart';
 import 'package:path/path.dart' as Path;
 
 import 'package:aes_app/controllers/count.dart';
@@ -9,6 +10,7 @@ import 'package:fluent_ui/fluent_ui.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:cross_file/cross_file.dart';
 import 'package:get/get.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:simple_ripple_animation/simple_ripple_animation.dart';
 import 'package:file_picker/file_picker.dart';
@@ -43,6 +45,10 @@ class _EncryptPageState extends State<EncryptPage> {
   ScrollController scrollController1 = ScrollController();
   ScrollController scrollController2 = ScrollController();
 
+  RSAKeypair rsaKeypair = RSAKeypair.fromRandom();
+  String tempKeysPath = "";
+  String keysPath = "";
+
   @override
   void initState() {
     scrollController1;
@@ -62,12 +68,15 @@ class _EncryptPageState extends State<EncryptPage> {
     String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
 
     if (selectedDirectory == null) {
-      print("oof");
+      setState(() {
+        saveController.text = currentDirectory;
+      });
+    } else {
+      setState(() {
+        directory = selectedDirectory.toString();
+      });
+      print(directory);
     }
-    setState(() {
-      directory = selectedDirectory.toString();
-    });
-    print(directory);
   }
 
   String fileName(String path) {
@@ -81,8 +90,7 @@ class _EncryptPageState extends State<EncryptPage> {
     return path.substring(start);
   }
 
-  _createFolder(String savePath) async {
-    final folderName = "EncryptedFiles";
+  _createFolder(String savePath, [String folderName = "EncryptedFiles"]) async {
     final path = Directory(savePath + "/" + folderName);
 
     if ((await path.exists())) {
@@ -92,7 +100,19 @@ class _EncryptPageState extends State<EncryptPage> {
     }
   }
 
-  Future<String> findFolder(String path) async {
+  int findInsert(String path) {
+    int start = 0;
+    for (int i = path.length - 1; i >= 0; i--) {
+      if (path[i] == "\\") {
+        start = i;
+        break;
+      }
+    }
+    return start;
+  }
+
+  Future<String> findFolder(String path,
+      [String folderName = "EncryptedFiles"]) async {
     var dir = Directory(path);
     String temp = "";
     String ret = "";
@@ -100,7 +120,7 @@ class _EncryptPageState extends State<EncryptPage> {
     var indexes = [];
 
     await for (var entity in dir.list(recursive: true, followLinks: false)) {
-      if (entity.path.contains("EncryptedFiles")) {
+      if (entity.path.contains(folderName)) {
         temp = entity.path;
       }
     }
@@ -112,6 +132,45 @@ class _EncryptPageState extends State<EncryptPage> {
     }
     return temp.substring(indexes[indexes.length - 1]);
   }
+
+  Future<String> get _localPath async {
+    final dir = await getApplicationDocumentsDirectory();
+    print(dir.path);
+    return dir.path;
+  }
+
+  Future<File> get _localFile async {
+    final path = await _localPath;
+    return File('$path/data.txt');
+  }
+
+  Future<File> writeContent() async {
+    final file = await _localFile;
+    print(file.path);
+    return file.writeAsString("Fuck me");
+  }
+
+  Future<List<String>> listFiles(String path) async {
+    var dir = Directory(path);
+    List<String> files = [];
+
+    await for (var entity in dir.list(recursive: true, followLinks: false)) {
+      if (!entity.path.contains("EncryptedFiles")) {
+        files.add(entity.path);
+      }
+    }
+    return files;
+  }
+
+  // Future<File> get _keysFile async {
+  //   final path = keysPath;
+  //   return File(path);
+  // }
+
+  // Future<File> writeContent() async {
+  //   final file = await _keysFile;
+  //   return file.writeAsString("Kill Me");
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -150,7 +209,7 @@ class _EncryptPageState extends State<EncryptPage> {
                       width: MediaQuery.of(context).size.width / 2,
                       decoration: BoxDecoration(
                         color: const Color(0xFf808080).withOpacity(0.35),
-                        borderRadius: BorderRadius.circular(30),
+                        borderRadius: BorderRadius.circular(5),
                       ),
                       child: const Text(
                         "Files to encrypt ...",
@@ -167,7 +226,7 @@ class _EncryptPageState extends State<EncryptPage> {
                         width: MediaQuery.of(context).size.width / 2,
                         decoration: BoxDecoration(
                           color: const Color(0xFf808080).withOpacity(0.35),
-                          borderRadius: BorderRadius.circular(30),
+                          borderRadius: BorderRadius.circular(5),
                         ),
                         child: Padding(
                           padding: const EdgeInsets.all(12.0),
@@ -211,7 +270,7 @@ class _EncryptPageState extends State<EncryptPage> {
                       width: MediaQuery.of(context).size.width / 2,
                       decoration: BoxDecoration(
                         color: const Color(0xFf808080).withOpacity(0.35),
-                        borderRadius: BorderRadius.circular(30),
+                        borderRadius: BorderRadius.circular(5),
                       ),
                       child: SingleChildScrollView(
                         controller: scrollController2,
@@ -403,7 +462,7 @@ class _EncryptPageState extends State<EncryptPage> {
                   width: MediaQuery.of(context).size.width / 2,
                   decoration: BoxDecoration(
                     color: const Color(0xFf808080).withOpacity(0.35),
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: BorderRadius.circular(5),
                   ),
                   child: Padding(
                     padding:
@@ -519,18 +578,85 @@ class _EncryptPageState extends State<EncryptPage> {
                                 onTap: () async {
                                   if (passwordController.text.isNotEmpty &&
                                       saveController.text.isNotEmpty) {
-                                    _createFolder(saveController.text);
+                                    if (_RSAEnabled == "Yes") {
+                                      _createFolder(saveController.text);
 
-                                    for (final i in _list) {
-                                      es.aesEncrypt(
-                                        i.path,
-                                        passwordController.text,
-                                        saveController.text,
-                                        es.withoutDotAes(i.path)[2],
-                                      );
-                                      print(await findFolder(
-                                          saveController.text));
-                                      cc.increment();
+                                      String folderName =
+                                          await findFolder(saveController.text);
+
+                                      for (final i in _list) {
+                                        es.aesEncrypt(
+                                          i.path,
+                                          passwordController.text,
+                                          saveController.text,
+                                          es.withoutDotAes(i.path)[2],
+                                        );
+                                      }
+
+                                      String encryptedPassword = rsaKeypair
+                                          .publicKey
+                                          .encrypt(passwordController.text);
+
+                                      List<String> currentFiles =
+                                          await listFiles(saveController.text);
+
+                                      String folderPath = "";
+
+                                      for (final i in currentFiles) {
+                                        int index = findInsert(i);
+                                        await File(i).rename(
+                                          i.substring(0, index) +
+                                              folderName +
+                                              i.substring(index),
+                                        );
+                                        folderPath =
+                                            i.substring(0, index) + folderName;
+
+                                        cc.increment();
+                                      }
+
+                                      _createFolder(folderPath, "Keys");
+
+                                      setState(() {
+                                        tempKeysPath =
+                                            Path.join(folderPath, "Keys");
+
+                                        keysPath =
+                                            Path.join(tempKeysPath, "keys.txt");
+                                      });
+
+                                      await writeContent();
+
+                                      // await _write(passwordController.text, keysPath,
+                                      //     "key.txt");
+
+                                    } else {
+                                      _createFolder(saveController.text);
+
+                                      String folderName =
+                                          await findFolder(saveController.text);
+
+                                      for (final i in _list) {
+                                        es.aesEncrypt(
+                                          i.path,
+                                          passwordController.text,
+                                          saveController.text,
+                                          es.withoutDotAes(i.path)[2],
+                                        );
+                                      }
+
+                                      List<String> currentFiles =
+                                          await listFiles(saveController.text);
+
+                                      for (final i in currentFiles) {
+                                        int index = findInsert(i);
+                                        await File(i).rename(
+                                          i.substring(0, index) +
+                                              folderName +
+                                              i.substring(index),
+                                        );
+                                        cc.increment();
+                                      }
                                     }
                                   } else {
                                     showDialog(
@@ -586,24 +712,24 @@ class _EncryptPageState extends State<EncryptPage> {
                                 ),
                               ),
                               const SizedBox(height: 30),
-                              Obx(
-                                () => CircularPercentIndicator(
-                                  radius: 70,
-                                  percent: cc.count / _list.length,
-                                  animation: true,
-                                  progressColor: const Color(0xFFf06b76),
-                                  backgroundColor: const Color(0xFF272727),
-                                  lineWidth: 10,
-                                  circularStrokeCap: CircularStrokeCap.round,
-                                  center: Text(
-                                    (cc.count / _list.length * 100)
-                                            .toInt()
-                                            .toString() +
-                                        "%",
-                                    style: const TextStyle(fontSize: 20),
-                                  ),
-                                ),
-                              ),
+                              // Obx(
+                              //   () => CircularPercentIndicator(
+                              //     radius: 70,
+                              //     percent: cc.count / _list.length,
+                              //     animation: true,
+                              //     progressColor: const Color(0xFFf06b76),
+                              //     backgroundColor: const Color(0xFF272727),
+                              //     lineWidth: 10,
+                              //     circularStrokeCap: CircularStrokeCap.round,
+                              //     center: Text(
+                              //       (cc.count / _list.length * 100)
+                              //               .toInt()
+                              //               .toString() +
+                              //           "%",
+                              //       style: const TextStyle(fontSize: 20),
+                              //     ),
+                              //   ),
+                              // ),
                             ],
                           ),
                         ),

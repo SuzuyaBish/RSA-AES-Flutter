@@ -61,12 +61,15 @@ class _DecryptPageState extends State<DecryptPage> {
     String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
 
     if (selectedDirectory == null) {
-      print("oof");
+      setState(() {
+        saveController.text = currentDirectory;
+      });
+    } else {
+      setState(() {
+        directory = selectedDirectory.toString();
+      });
+      print(directory);
     }
-    setState(() {
-      directory = selectedDirectory.toString();
-    });
-    print(directory);
   }
 
   String fileName(String path) {
@@ -81,14 +84,59 @@ class _DecryptPageState extends State<DecryptPage> {
   }
 
   _createFolder(String savePath) async {
-    const folderName = "DecryptedFiles";
-    final path = Directory(savePath + folderName);
+    final folderName = "DecryptedFiles";
+    final path = Directory(savePath + "/" + folderName);
 
     if ((await path.exists())) {
       print("Path exists");
     } else {
       path.create();
     }
+  }
+
+  int findInsert(String path) {
+    int start = 0;
+    for (int i = path.length - 1; i >= 0; i--) {
+      if (path[i] == "\\") {
+        start = i;
+        break;
+      }
+    }
+    return start;
+  }
+
+  Future<String> findFolder(String path) async {
+    var dir = Directory(path);
+    String temp = "";
+    String ret = "";
+    int count = 0;
+    var indexes = [];
+
+    await for (var entity in dir.list(recursive: true, followLinks: false)) {
+      if (entity.path.contains("DecryptedFiles")) {
+        temp = entity.path;
+      }
+    }
+
+    for (int i = 0; i < temp.length; i++) {
+      if (temp[i] == "\\") {
+        indexes.add(i);
+      }
+    }
+    return temp.substring(indexes[indexes.length - 1]);
+  }
+
+  Future<List<String>> listFiles(String path) async {
+    var dir = Directory(path);
+    List<String> files = [];
+
+    await for (var entity in dir.list(recursive: true, followLinks: false)) {
+      if (!entity.path.contains("DecryptedFiles") &&
+          !entity.path.contains("EncryptedFiles")) {
+        files.add(entity.path);
+      }
+    }
+    return files;
   }
 
   @override
@@ -494,21 +542,34 @@ class _DecryptPageState extends State<DecryptPage> {
                           child: Column(
                             children: [
                               GestureDetector(
-                                onTap: () {
-                                  
+                                onTap: () async {
                                   if (passwordController.text.isNotEmpty &&
                                       saveController.text.isNotEmpty) {
-                                    _createFolder(saveController.text + "\\");
+                                    _createFolder(saveController.text);
+
+                                    String folderName =
+                                        await findFolder(saveController.text);
+
                                     for (final i in _list) {
                                       es.aesDecrypt(
                                         i.path,
                                         passwordController.text,
-                                        saveController.text +
-                                            r'\' +
-                                            "DecryptedFiles",
+                                        saveController.text,
                                         es.withoutDotAes(i.path)[2],
                                       );
-                                      cc.increment();
+                                    }
+
+                                    List<String> currentFiles =
+                                        await listFiles(saveController.text);
+
+                                    for (final i in currentFiles) {
+                                      int index = findInsert(i);
+                                      await File(i).rename(
+                                        i.substring(0, index) +
+                                            folderName +
+                                            i.substring(index),
+                                      );
+                                      cc.increment2();
                                     }
                                   } else {
                                     showDialog(
@@ -564,24 +625,24 @@ class _DecryptPageState extends State<DecryptPage> {
                                 ),
                               ),
                               const SizedBox(height: 30),
-                              // Obx(
-                              //   () => CircularPercentIndicator(
-                              //     radius: 70,
-                              //     percent: 0.5,
-                              //     animation: true,
-                              //     progressColor: const Color(0xFFf06b76),
-                              //     backgroundColor: const Color(0xFF272727),
-                              //     lineWidth: 10,
-                              //     circularStrokeCap: CircularStrokeCap.round,
-                              //     center: Text(
-                              //       (cc.count / _list.length * 100)
-                              //               .toInt()
-                              //               .toString() +
-                              //           "%",
-                              //       style: const TextStyle(fontSize: 20),
-                              //     ),
-                              //   ),
-                              // ),
+                              Obx(
+                                () => CircularPercentIndicator(
+                                  radius: 70,
+                                  percent: cc.count2 / _list.length,
+                                  animation: true,
+                                  progressColor: const Color(0xFFf06b76),
+                                  backgroundColor: const Color(0xFF272727),
+                                  lineWidth: 10,
+                                  circularStrokeCap: CircularStrokeCap.round,
+                                  center: Text(
+                                    (cc.count2 / _list.length * 100)
+                                            .toInt()
+                                            .toString() +
+                                        "%",
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ),

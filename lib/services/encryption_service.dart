@@ -65,8 +65,7 @@ class EncryptionService {
     crypt.setPassword(password);
 
     try {
-      decFilePath = crypt.decryptFileSync(
-          srcFilePath, destinationFilePath + 'u005C' + fileName);
+      decFilePath = crypt.decryptFileSync(srcFilePath, destinationFilePath + fileName);
     } on AesCryptException catch (e) {
       if (e.type == AesCryptExceptionType.destFileExists) {
         print(e.message);
