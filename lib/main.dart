@@ -1,7 +1,7 @@
 import 'package:aes_app/pages/decrypt_page.dart';
 import 'package:aes_app/pages/encrypt_page.dart';
 import 'package:aes_app/pages/settings_page.dart';
-import 'package:aes_app/pages/summary_page.dart';
+import 'package:aes_app/pages/generate_keys.dart';
 import 'package:aes_app/utils/window_buttons.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart' as flutter_acrylic;
@@ -36,7 +36,7 @@ void main() async {
       await windowManager.setSkipTaskbar(false);
     });
   }
-  
+
   Paint.enableDithering = true;
   runApp(const MyApp());
 }
@@ -116,16 +116,16 @@ class _MyHomePageState extends State<MyHomePage> {
         items: [
           PaneItemSeparator(),
           PaneItem(
-            icon: const Icon(FluentIcons.dataflows),
+            icon: const Icon(FluentIcons.generate),
+            title: const Text('RSA Key Generation'),
+          ),
+          PaneItem(
+            icon: const Icon(FluentIcons.encryption),
             title: const Text('Encrypt'),
           ),
           PaneItem(
-            icon: const Icon(FluentIcons.dataverse),
+            icon: const Icon(FluentIcons.data_flow),
             title: const Text('Decrypt'),
-          ),
-          PaneItem(
-            icon: const Icon(FluentIcons.icon_sets_flag),
-            title: const Text('Summary'),
           ),
         ],
         footerItems: [
@@ -139,9 +139,9 @@ class _MyHomePageState extends State<MyHomePage> {
       content: NavigationBody(
         index: index,
         children: const [
+          RSAKeyGeneratePage(),
           EncryptPage(),
           DecryptPage(),
-          SummaryPage(),
           SettingsPage(),
         ],
       ),

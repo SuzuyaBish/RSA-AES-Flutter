@@ -662,8 +662,6 @@ class _EncryptPageState extends State<EncryptPage> {
                                               folderName +
                                               i.substring(index),
                                         );
-                                        // folderPath =
-                                        //     i.substring(0, index) + folderName;
 
                                         cc.increment();
                                       }
