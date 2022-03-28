@@ -35,6 +35,7 @@ class _DecryptPageState extends State<DecryptPage> {
   bool _useDefaultLocaiton = false;
   int count = 0;
   int actual = 0;
+  List<File> keys = [];
 
   TextEditingController passwordController = TextEditingController();
   TextEditingController saveController = TextEditingController();
@@ -139,6 +140,22 @@ class _DecryptPageState extends State<DecryptPage> {
     return files;
   }
 
+  Future<List<File>> pickKeys() async {
+    FilePickerResult? result =
+        await FilePicker.platform.pickFiles(allowMultiple: true);
+
+    List<File> files = [];
+
+    if (result != null) {
+      setState(() {
+        files = result.paths.map((path) => File(path!)).toList();
+      });
+    } else {
+      print("Cancelled");
+    }
+    return files;
+  }
+
   @override
   Widget build(BuildContext context) {
     EncryptionService es = EncryptionService();
@@ -154,8 +171,8 @@ class _DecryptPageState extends State<DecryptPage> {
     if (saveController.text == "" && tempString == "" && directory != "") {
       saveController.text = directory;
     }
-    return _isVisible ? DecryptWidget(es) : DecryptSummary(requirments, es, cc);
-    //return DecryptSummary(requirments, es, cc);
+    //return _isVisible ? DecryptWidget(es) : DecryptSummary(requirments, es, cc);
+    return DecryptSummary(requirments, es, cc);
   }
 
   AnimatedOpacity DecryptSummary(
@@ -349,27 +366,127 @@ class _DecryptPageState extends State<DecryptPage> {
                                 ),
                               ),
                               const SizedBox(height: 20),
-                              TextBox(
-                                toolbarOptions: const ToolbarOptions(
-                                  copy: true,
-                                  cut: true,
-                                  paste: true,
-                                  selectAll: true,
+                              if (_RSAEnabled == "Yes") ...[
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        const Text(
+                                          "Key Paths:",
+                                          style: TextStyle(
+                                            color: Color(0xFFf06b76),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        IconButton(
+                                          icon: const Icon(
+                                            FluentIcons.file_request,
+                                            size: 15,
+                                          ),
+                                          onPressed: () {
+                                            showDialog(
+                                              context: context,
+                                              builder: (BuildContext context) {
+                                                return ContentDialog(
+                                                  actions: [
+                                                    TextButton(
+                                                      child: const Text(
+                                                        "Okay",
+                                                        style: TextStyle(
+                                                          color:
+                                                              Color(0xFFf06b76),
+                                                        ),
+                                                      ),
+                                                      onPressed: () {
+                                                        Navigator.pop(context);
+                                                        setState(() async {
+                                                          keys =
+                                                              await pickKeys();
+                                                        });
+                                                      },
+                                                    ),
+                                                  ],
+                                                  backgroundDismiss: true,
+                                                  title: const Text(
+                                                    "Warning",
+                                                    style: TextStyle(
+                                                      color: Color(0xFFf06b76),
+                                                    ),
+                                                  ),
+                                                  content: const Text(
+                                                    "Pick 'aes.txt' and 'priv.txt' or it will not work",
+                                                  ),
+                                                );
+                                              },
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Row(
+                                      children: [
+                                        const Text(
+                                          "AES key path:",
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Text(
+                                          keys.isEmpty ? "Empty" : keys[0].path,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Color(0xFFf06b76),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Row(
+                                      children: [
+                                        const Text(
+                                          "RSA key path:",
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Text(
+                                          keys.isEmpty ? "Empty" : keys[0].path,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Color(0xFFf06b76),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
-                                controller: passwordController,
-                                obscureText: true,
-                                obscuringCharacter: "*",
-                                header: "Password:",
-                                placeholder: "Type your password here",
-                                headerStyle: const TextStyle(
-                                  color: Color(0xFFf06b76),
+                              ] else ...[
+                                TextBox(
+                                  toolbarOptions: const ToolbarOptions(
+                                    copy: true,
+                                    cut: true,
+                                    paste: true,
+                                    selectAll: true,
+                                  ),
+                                  controller: passwordController,
+                                  obscureText: true,
+                                  obscuringCharacter: "*",
+                                  header: "Password:",
+                                  placeholder: "Type your password here",
+                                  headerStyle: const TextStyle(
+                                    color: Color(0xFFf06b76),
+                                  ),
+                                  onChanged: (s) {
+                                    setState(() {
+                                      passwordController.text = s;
+                                    });
+                                  },
                                 ),
-                                onChanged: (s) {
-                                  setState(() {
-                                    passwordController.text = s;
-                                  });
-                                },
-                              ),
+                              ],
                               const SizedBox(height: 20),
                               Divider(
                                 style: DividerThemeData(
@@ -625,24 +742,24 @@ class _DecryptPageState extends State<DecryptPage> {
                                 ),
                               ),
                               const SizedBox(height: 30),
-                              Obx(
-                                () => CircularPercentIndicator(
-                                  radius: 70,
-                                  percent: cc.count2 / _list.length,
-                                  animation: true,
-                                  progressColor: const Color(0xFFf06b76),
-                                  backgroundColor: const Color(0xFF272727),
-                                  lineWidth: 10,
-                                  circularStrokeCap: CircularStrokeCap.round,
-                                  center: Text(
-                                    (cc.count2 / _list.length * 100)
-                                            .toInt()
-                                            .toString() +
-                                        "%",
-                                    style: const TextStyle(fontSize: 20),
-                                  ),
-                                ),
-                              ),
+                              // Obx(
+                              //   () => CircularPercentIndicator(
+                              //     radius: 70,
+                              //     percent: cc.count2 / _list.length,
+                              //     animation: true,
+                              //     progressColor: const Color(0xFFf06b76),
+                              //     backgroundColor: const Color(0xFF272727),
+                              //     lineWidth: 10,
+                              //     circularStrokeCap: CircularStrokeCap.round,
+                              //     center: Text(
+                              //       (cc.count2 / _list.length * 100)
+                              //               .toInt()
+                              //               .toString() +
+                              //           "%",
+                              //       style: const TextStyle(fontSize: 20),
+                              //     ),
+                              //   ),
+                              // ),
                             ],
                           ),
                         ),

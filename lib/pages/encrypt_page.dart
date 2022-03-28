@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'package:crypton/crypton.dart';
 import 'package:path/path.dart' as Path;
@@ -46,23 +47,9 @@ class _EncryptPageState extends State<EncryptPage> {
   ScrollController scrollController2 = ScrollController();
 
   RSAKeypair rsaKeypair = RSAKeypair.fromRandom();
-  String tempKeysPath = "";
-  String keysPath = "";
-
-  @override
-  void initState() {
-    scrollController1;
-    scrollController2;
-
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    passwordController.dispose();
-    saveController.dispose();
-    super.dispose();
-  }
+  String pubKeyPath = "";
+  String privKeyPath = "";
+  String aesKeyPath = "";
 
   void pickFolder() async {
     String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
@@ -141,13 +128,48 @@ class _EncryptPageState extends State<EncryptPage> {
 
   Future<File> get _localFile async {
     final path = await _localPath;
-    return File('$path/data.txt');
+    return File('$path\\priv.txt');
+  }
+
+  Future<File> get _localFile2 async {
+    final path = await _localPath;
+    return File('$path\\pub.txt');
+  }
+
+  Future<File> get _localFile3 async {
+    final path = await _localPath;
+    return File('$path\\aes.txt');
   }
 
   Future<File> writeContent() async {
     final file = await _localFile;
-    print(file.path);
-    return file.writeAsString("Fuck me");
+
+    setState(() {
+      privKeyPath = file.path;
+    });
+
+    return file.writeAsString(rsaKeypair.privateKey.toString());
+  }
+
+  Future<File> writeContent2() async {
+    final file = await _localFile2;
+
+    setState(() {
+      pubKeyPath = file.path;
+    });
+
+    return file.writeAsString(rsaKeypair.publicKey.toString());
+  }
+
+  Future<File> writeContent3() async {
+    final file = await _localFile3;
+    String encrypted = rsaKeypair.publicKey.encrypt(passwordController.text);
+
+    setState(() {
+      aesKeyPath = file.path;
+    });
+
+    return file.writeAsString(encrypted);
   }
 
   Future<List<String>> listFiles(String path) async {
@@ -162,15 +184,46 @@ class _EncryptPageState extends State<EncryptPage> {
     return files;
   }
 
-  // Future<File> get _keysFile async {
-  //   final path = keysPath;
-  //   return File(path);
-  // }
+  int findInsertsKeys(String path) {
+    int start = 0;
+    int count = 0;
+    for (int i = path.length - 1; i >= 0; i--) {
+      if (path[i] == "\\") {
+        count++;
+      }
+      if (count == 2) {
+        start = i;
+        break;
+      }
+    }
+    return start;
+  }
 
-  // Future<File> writeContent() async {
-  //   final file = await _keysFile;
-  //   return file.writeAsString("Kill Me");
-  // }
+  int findInsertFilePath(String path) {
+    int start = 0;
+    for (int i = path.length - 1; i >= 0; i--) {
+      if (path[i] == "\\") {
+        start = i;
+        break;
+      }
+    }
+    return start;
+  }
+
+  @override
+  void initState() {
+    scrollController1;
+    scrollController2;
+
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    passwordController.dispose();
+    saveController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -600,7 +653,7 @@ class _EncryptPageState extends State<EncryptPage> {
                                       List<String> currentFiles =
                                           await listFiles(saveController.text);
 
-                                      String folderPath = "";
+                                      String folderPath = saveController.text;
 
                                       for (final i in currentFiles) {
                                         int index = findInsert(i);
@@ -609,27 +662,52 @@ class _EncryptPageState extends State<EncryptPage> {
                                               folderName +
                                               i.substring(index),
                                         );
-                                        folderPath =
-                                            i.substring(0, index) + folderName;
+                                        // folderPath =
+                                        //     i.substring(0, index) + folderName;
 
                                         cc.increment();
                                       }
 
                                       _createFolder(folderPath, "Keys");
 
-                                      setState(() {
-                                        tempKeysPath =
-                                            Path.join(folderPath, "Keys");
-
-                                        keysPath =
-                                            Path.join(tempKeysPath, "keys.txt");
-                                      });
+                                      String tempKeysPath =
+                                          Path.join(folderPath, "Keys");
 
                                       await writeContent();
 
-                                      // await _write(passwordController.text, keysPath,
-                                      //     "key.txt");
+                                      await File(privKeyPath).rename(privKeyPath
+                                              .substring(
+                                                  0,
+                                                  findInsertFilePath(
+                                                      privKeyPath)) +
+                                          tempKeysPath.substring(
+                                              findInsertsKeys(tempKeysPath)) +
+                                          privKeyPath.substring(
+                                              findInsertFilePath(privKeyPath)));
 
+                                      await writeContent2();
+
+                                      await File(pubKeyPath).rename(pubKeyPath
+                                              .substring(
+                                                  0,
+                                                  findInsertFilePath(
+                                                      pubKeyPath)) +
+                                          tempKeysPath.substring(
+                                              findInsertsKeys(tempKeysPath)) +
+                                          pubKeyPath.substring(
+                                              findInsertFilePath(pubKeyPath)));
+
+                                      await writeContent3();
+
+                                      await File(aesKeyPath).rename(aesKeyPath
+                                              .substring(
+                                                  0,
+                                                  findInsertFilePath(
+                                                      aesKeyPath)) +
+                                          tempKeysPath.substring(
+                                              findInsertsKeys(tempKeysPath)) +
+                                          aesKeyPath.substring(
+                                              findInsertFilePath(aesKeyPath)));
                                     } else {
                                       _createFolder(saveController.text);
 
@@ -712,24 +790,24 @@ class _EncryptPageState extends State<EncryptPage> {
                                 ),
                               ),
                               const SizedBox(height: 30),
-                              // Obx(
-                              //   () => CircularPercentIndicator(
-                              //     radius: 70,
-                              //     percent: cc.count / _list.length,
-                              //     animation: true,
-                              //     progressColor: const Color(0xFFf06b76),
-                              //     backgroundColor: const Color(0xFF272727),
-                              //     lineWidth: 10,
-                              //     circularStrokeCap: CircularStrokeCap.round,
-                              //     center: Text(
-                              //       (cc.count / _list.length * 100)
-                              //               .toInt()
-                              //               .toString() +
-                              //           "%",
-                              //       style: const TextStyle(fontSize: 20),
-                              //     ),
-                              //   ),
-                              // ),
+                              Obx(
+                                () => CircularPercentIndicator(
+                                  radius: 70,
+                                  percent: cc.count / _list.length,
+                                  animation: true,
+                                  progressColor: const Color(0xFFf06b76),
+                                  backgroundColor: const Color(0xFF272727),
+                                  lineWidth: 10,
+                                  circularStrokeCap: CircularStrokeCap.round,
+                                  center: Text(
+                                    (cc.count / _list.length * 100)
+                                            .toInt()
+                                            .toString() +
+                                        "%",
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ),
