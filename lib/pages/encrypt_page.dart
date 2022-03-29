@@ -26,18 +26,18 @@ class EncryptPage extends StatefulWidget {
 class _EncryptPageState extends State<EncryptPage> {
   final List<XFile> _list = [];
   Offset? offset;
-  bool _dragging = false;
-  bool _isChecked = false;
+  bool dragging = false;
+  bool isChecked = false;
   String directory = "";
   String pubKeyDirectory = "";
-  bool _tempIsVisible = true;
-  bool _isVisible = true;
-  bool _isExpanded = false;
-  String? _RSAEnabled;
+  bool tempIsVisible = true;
+  bool isVisible = true;
+  bool isExpanded = false;
+  String? rsaEnabled;
   final values = ["No", "Yes"];
   String currentDirectory = Directory.current.path;
   String tempString = "";
-  bool _useDefaultLocaiton = false;
+  bool useDefaultLocaiton = false;
   int count = 0;
   int actual = 0;
   String tempStrForPub = "";
@@ -89,17 +89,6 @@ class _EncryptPageState extends State<EncryptPage> {
     }
   }
 
-  String fileName(String path) {
-    int start = 0;
-    for (int i = path.length - 1; i >= 0; i--) {
-      if (path[i] == "\\") {
-        start = i;
-        break;
-      }
-    }
-    return path.substring(start);
-  }
-
   createFolder(String savePath, [String folderName = "EncryptedFiles"]) async {
     final path = Directory(savePath + "/" + folderName);
 
@@ -113,39 +102,6 @@ class _EncryptPageState extends State<EncryptPage> {
       });
       path.create();
     }
-  }
-
-  int findInsert(String path) {
-    int start = 0;
-    for (int i = path.length - 1; i >= 0; i--) {
-      if (path[i] == "\\") {
-        start = i;
-        break;
-      }
-    }
-    return start;
-  }
-
-  Future<String> findFolder(String path,
-      [String folderName = "EncryptedFiles"]) async {
-    var dir = Directory(path);
-    String temp = "";
-    String ret = "";
-    int count = 0;
-    var indexes = [];
-
-    await for (var entity in dir.list(recursive: true, followLinks: false)) {
-      if (entity.path.contains(folderName)) {
-        temp = entity.path;
-      }
-    }
-
-    for (int i = 0; i < temp.length; i++) {
-      if (temp[i] == "\\") {
-        indexes.add(i);
-      }
-    }
-    return temp.substring(indexes[indexes.length - 1]);
   }
 
   Future<String> get _localPath async {
@@ -182,60 +138,6 @@ class _EncryptPageState extends State<EncryptPage> {
     } catch (e) {
       return "";
     }
-  }
-
-  // Future<String> readAESKey(String pathToAESKey) async {
-  //   try {
-  //     final file = File(pathToAESKey);
-
-  //     final contents = await file.readAsString();
-
-  //     setState(() {
-  //       aesKey = contents;
-  //     });
-
-  //     return contents;
-  //   } catch (e) {
-  //     return "";
-  //   }
-  // }
-
-  Future<List<String>> listFiles(String path) async {
-    var dir = Directory(path);
-    List<String> files = [];
-
-    await for (var entity in dir.list(recursive: true, followLinks: false)) {
-      if (!entity.path.contains("EncryptedFiles")) {
-        files.add(entity.path);
-      }
-    }
-    return files;
-  }
-
-  int findInsertsKeys(String path) {
-    int start = 0;
-    int count = 0;
-    for (int i = path.length - 1; i >= 0; i--) {
-      if (path[i] == "\\") {
-        count++;
-      }
-      if (count == 2) {
-        start = i;
-        break;
-      }
-    }
-    return start;
-  }
-
-  int findInsertFilePath(String path) {
-    int start = 0;
-    for (int i = path.length - 1; i >= 0; i--) {
-      if (path[i] == "\\") {
-        start = i;
-        break;
-      }
-    }
-    return start;
   }
 
   Future<String> pickPubKey() async {
@@ -298,7 +200,7 @@ class _EncryptPageState extends State<EncryptPage> {
         pubKeyDirectory != "") {
       theirPubKeyPathController.text = directory;
     }
-    return _isVisible ? encryptWidget(es) : encryptSummary(requirments, es, cc);
+    return isVisible ? encryptWidget(es) : encryptSummary(requirments, es, cc);
     //return EncryptSummary(requirments, es, cc);
   }
 
@@ -314,7 +216,7 @@ class _EncryptPageState extends State<EncryptPage> {
             children: [
               Column(
                 children: [
-                  if (_isExpanded) ...[
+                  if (isExpanded) ...[
                     Container(
                       padding: const EdgeInsets.all(20),
                       width: MediaQuery.of(context).size.width / 2,
@@ -401,7 +303,7 @@ class _EncryptPageState extends State<EncryptPage> {
                                     ),
                                   ),
                                   IconButton(
-                                    icon: _isExpanded
+                                    icon: isExpanded
                                         ? const Icon(
                                             FluentIcons.collapse_content,
                                             color: Color(0xFFf06b76),
@@ -411,13 +313,13 @@ class _EncryptPageState extends State<EncryptPage> {
                                             color: Color(0xFFf06b76),
                                           ),
                                     onPressed: () {
-                                      if (_isExpanded) {
+                                      if (isExpanded) {
                                         setState(() {
-                                          _isExpanded = false;
+                                          isExpanded = false;
                                         });
                                       } else {
                                         setState(() {
-                                          _isExpanded = true;
+                                          isExpanded = true;
                                         });
                                       }
                                     },
@@ -455,11 +357,11 @@ class _EncryptPageState extends State<EncryptPage> {
                                                 child: Text(e),
                                               ))
                                           .toList(),
-                                      value: _RSAEnabled,
+                                      value: rsaEnabled,
                                       onChanged: (v) {
                                         if (v != null) {
                                           setState(() {
-                                            _RSAEnabled = v.toString();
+                                            rsaEnabled = v.toString();
                                           });
                                         }
                                       },
@@ -482,7 +384,7 @@ class _EncryptPageState extends State<EncryptPage> {
                                   ),
                                 ],
                               ),
-                              if (_RSAEnabled == "Yes") ...[
+                              if (rsaEnabled == "Yes") ...[
                                 const SizedBox(height: 20),
                                 Divider(
                                   style: DividerThemeData(
@@ -647,7 +549,7 @@ class _EncryptPageState extends State<EncryptPage> {
                             Text(
                               "RSA enabled: ",
                               style: TextStyle(
-                                color: _RSAEnabled == "Yes"
+                                color: rsaEnabled == "Yes"
                                     ? Colors.white
                                     : const Color(0xFFD3D3D3).withOpacity(.80),
                                 fontSize: 12,
@@ -655,10 +557,10 @@ class _EncryptPageState extends State<EncryptPage> {
                             ),
                             const SizedBox(width: 10),
                             Icon(
-                              _RSAEnabled == "Yes"
+                              rsaEnabled == "Yes"
                                   ? FluentIcons.accept
                                   : FluentIcons.status_circle_error_x,
-                              color: _RSAEnabled == "Yes"
+                              color: rsaEnabled == "Yes"
                                   ? const Color(0xFF66FF00)
                                   : const Color(0xFFD3D3D3).withOpacity(.80),
                             ),
@@ -693,7 +595,7 @@ class _EncryptPageState extends State<EncryptPage> {
                             Text(
                               "Save location: ",
                               style: TextStyle(
-                                color: _useDefaultLocaiton == false &&
+                                color: useDefaultLocaiton == false &&
                                         directory == ""
                                     ? const Color(0xFFD3D3D3).withOpacity(.80)
                                     : Colors.white,
@@ -702,19 +604,19 @@ class _EncryptPageState extends State<EncryptPage> {
                             ),
                             const SizedBox(width: 10),
                             Icon(
-                              _useDefaultLocaiton == false && directory == ""
+                              useDefaultLocaiton == false && directory == ""
                                   ? FluentIcons.status_circle_error_x
                                   : FluentIcons.accept,
-                              color: _useDefaultLocaiton == false &&
-                                      directory == ""
-                                  ? const Color(0xFFf06b76)
-                                  : const Color(0xFF66FF00),
+                              color:
+                                  useDefaultLocaiton == false && directory == ""
+                                      ? const Color(0xFFf06b76)
+                                      : const Color(0xFF66FF00),
                             ),
                             const SizedBox(width: 10),
                             GestureDetector(
                               onTap: () {
                                 setState(() {
-                                  _useDefaultLocaiton = true;
+                                  useDefaultLocaiton = true;
                                   saveController.text = currentDirectory;
                                 });
                               },
@@ -752,7 +654,8 @@ class _EncryptPageState extends State<EncryptPage> {
                                     setState(() {
                                       documentsDirectory = temp.path;
                                     });
-                                    if (_RSAEnabled == "Yes") {
+
+                                    if (rsaEnabled == "Yes") {
                                       String inBetween = saveController.text
                                           .substring(documentsDirectory.length);
 
@@ -792,6 +695,13 @@ class _EncryptPageState extends State<EncryptPage> {
                                           });
                                         });
                                       }
+
+                                      setState(() {
+                                        saveController.text = currentDirectory;
+                                        passwordController.text = "";
+                                        theirPubKeyPathController.text =
+                                            currentDirectory;
+                                      });
                                     } else {
                                       String inBetween = saveController.text
                                           .substring(documentsDirectory.length);
@@ -817,6 +727,13 @@ class _EncryptPageState extends State<EncryptPage> {
                                         setState(() {
                                           cc.count = 0.obs;
                                         });
+                                      });
+
+                                      setState(() {
+                                        saveController.text = currentDirectory;
+                                        passwordController.text = "";
+                                        theirPubKeyPathController.text =
+                                            currentDirectory;
                                       });
                                     }
                                   } else {
@@ -908,7 +825,7 @@ class _EncryptPageState extends State<EncryptPage> {
 
   AnimatedOpacity encryptWidget(EncryptionService es) {
     return AnimatedOpacity(
-      opacity: _tempIsVisible ? 1 : 0,
+      opacity: tempIsVisible ? 1 : 0,
       duration: const Duration(seconds: 1),
       child: ScaffoldPage.withPadding(
         padding: const EdgeInsets.all(20),
@@ -943,12 +860,12 @@ class _EncryptPageState extends State<EncryptPage> {
                   });
 
                   setState(() {
-                    _tempIsVisible = false;
+                    tempIsVisible = false;
                   });
 
                   Future.delayed(const Duration(seconds: 1), () {
                     setState(() {
-                      _isVisible = false;
+                      isVisible = false;
                     });
                   });
                 },
@@ -959,13 +876,13 @@ class _EncryptPageState extends State<EncryptPage> {
                 },
                 onDragEntered: (detail) {
                   setState(() {
-                    _dragging = true;
+                    dragging = true;
                     offset = detail.localPosition;
                   });
                 },
                 onDragExited: (detail) {
                   setState(() {
-                    _dragging = false;
+                    dragging = false;
                     offset = null;
                   });
                 },

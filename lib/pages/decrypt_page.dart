@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:crypton/crypton.dart';
+import 'package:path/path.dart' as Path;
 import 'package:aes_app/controllers/count.dart';
 import 'package:aes_app/controllers/requirments.dart';
 import 'package:aes_app/services/encryption_service.dart';
@@ -8,6 +10,7 @@ import 'package:fluent_ui/fluent_ui.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:cross_file/cross_file.dart';
 import 'package:get/get.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:simple_ripple_animation/simple_ripple_animation.dart';
 import 'package:file_picker/file_picker.dart';
@@ -28,7 +31,7 @@ class _DecryptPageState extends State<DecryptPage> {
   bool _tempIsVisible = true;
   bool _isVisible = true;
   bool _isExpanded = false;
-  String? _RSAEnabled;
+  String rsaEnabled = "No";
   final values = ["No", "Yes"];
   String currentDirectory = Directory.current.path;
   String tempString = "";
@@ -36,15 +39,28 @@ class _DecryptPageState extends State<DecryptPage> {
   int count = 0;
   int actual = 0;
   List<File> keys = [];
+  String tempStrForPriv = "";
+  String tempStrForAes = "";
+  String privKeyDirectory = "";
+  String aesKeyDirectory = "";
 
   TextEditingController passwordController = TextEditingController();
   TextEditingController saveController = TextEditingController();
+  TextEditingController privateKeyController = TextEditingController();
+  TextEditingController aesKeyController = TextEditingController();
 
   ScrollController scrollController1 = ScrollController();
   ScrollController scrollController2 = ScrollController();
 
-  String privKey =
-      "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCZJa//qrZ1NYFOs6Pt7kHCztJSlHoGmNQt3+l7JAAFVAfZaUalGE5sDZIj0mnYluwRe4g937avfZ1UUY5hCOddE9DEecaKlnJcDPfcLLcnHTnidbZpFbzlysvsB9QANNHv6X8aaDZemJsg+BHt/oLTStNEfQMH0QEaFrL+IBGzwZLdl/5DIAEOgMofgbgtQ5Bb/AjhgvXyqTzprKcBonv37xZHloFCDbIN1Z7rAta+xwcNgaBQd+W2FkoB1YiOnLW4JT5e3oFJ0cCYBGA3lTMuXi2rZm++2VksI3fEcP5iGkJ7RKVxHxKsAAySJ/9hWq/P3Fy31b0duNj3IejQD7YTAgMBAAECggEBAIXLNhpPYv29E83VBSctmof9tiNtEbpHtD6rusfY6Ke/BOh8n7pGJOUjagQfpFcTawPO/3TGyExCmrt6UMAXTkGzuRSdKsYSr7AZqETTT+M9Fj/xBL6DvjanWEZJhH31p19Ih8FjP/SesBA6iTd5vYOogC/6YzZl8ud+4zs+exilZjbKHlRHIniEE8KXj1KYilmNyt2Z9PDkdj6ktN0PmEBozgVV4mSIi47frwWHaMfZ6L2XskyLCZTSsTWD2YNW/x2v80J2+kne3oSETla5DaU618NRqDFeX7Qt9ufN9YGu7/bnwbP76ts7j54JhsW04Du5oFAVR0pt1el3hA9fPckCgYEA+csO6xs5fTSFSIETatIjq5xxMxs32wy+R7q+QjEqHMaGMJzteE41Z8ztMN5rfovuIWnflXOhuNti1vCht7c7+CtegWEhwZ8kP7NqmC/BzGlSj1Qzuc/+doNp6b8hGmxhrfgxEx3JcGhYb0hnGr3vI8svZogDNjmERtbVW0TVplUCgYEAnPPcgeJMndlIUPbn8ltct0MTgU+2eqeQlIvX7+JG7FTpOU4EVYnL8KuxcFHSW90mDwyn15OdRPWUrIRc7tw7OrJKI4u5dqSxzZYPWTF4Eg+i+6HLTEKNx15kZmAcHwkHvqdtwy3mDPgqSWDfoRFzGDqN9UDtN+0qRaT+gDczwscCgYAQxUFLJ5jEfzIzm/bhxRn/+5DeDYXCfyiHSFJdv09Ef0+jE+YdnaKYRXnnPgeZh2uFcsZAEnNZJeGM7Lruyq6MCt1dclgB191nKXSOoyYvwyJ33P9cCkrbShdiSiK+02f7dh5VWjqcAWVukz3Y3cegb5PPHnKYwWPQHbxVVFnDwQKBgEC2NwuCT46hgLSJKJb/XlndGRSu1hD6N51Xjz/DrvRQChzrctQFzYU8dRtXUQE5TDDWSfmTTjuZeaQrqtl9ChqoWfMP7/bf7sNSBKAEynm/4rYXPmgB5Mz3uTOQmuec5ImSJKpdqUVdqKm6fFm/hRHPSqp9C5GMgmpWnewlVn0PAoGAH37pxFR7QKG+Ki2x4PI3bcWmxxkrOzN9lS89YG0qovK+MPL152b0mn/Ei3Idq/qCAiyyoHwI8io0UmzBtLaO71ZU3zVZsfbof/qIVxFGneqaB3ubGdn1bSYmQvbBgrcdGaITdufltQLXp0y4YwbXRemzPRS1O4nP/GA6DYLBVIU=";
+  String keysDirectoryPath = "";
+  bool keysPathExists = false;
+  String documentsDirectory = "";
+
+  String privKeyPath = "";
+  String aesKeyPath = "";
+
+  String privKey = "";
+  String aesKey = "";
 
   @override
   void initState() {
@@ -58,6 +74,8 @@ class _DecryptPageState extends State<DecryptPage> {
   void dispose() {
     passwordController.dispose();
     saveController.dispose();
+    privateKeyController.dispose();
+    aesKeyController.dispose();
     super.dispose();
   }
 
@@ -76,71 +94,33 @@ class _DecryptPageState extends State<DecryptPage> {
     }
   }
 
-  String fileName(String path) {
-    int start = 0;
-    for (int i = path.length - 1; i >= 0; i--) {
-      if (path[i] == "\\") {
-        start = i;
-        break;
-      }
+  void pickFolder2() async {
+    String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
+
+    if (selectedDirectory == null) {
+      setState(() {
+        privateKeyController.text = currentDirectory;
+      });
+    } else {
+      setState(() {
+        privKeyPath = selectedDirectory.toString();
+      });
     }
-    return path.substring(start);
   }
 
-  _createFolder(String savePath) async {
-    final folderName = "DecryptedFiles";
+  createFolder(String savePath, [String folderName = "EncryptedFiles"]) async {
     final path = Directory(savePath + "/" + folderName);
 
     if ((await path.exists())) {
-      print("Path exists");
+      setState(() {
+        keysPathExists = true;
+      });
     } else {
+      setState(() {
+        keysDirectoryPath = path.path;
+      });
       path.create();
     }
-  }
-
-  int findInsert(String path) {
-    int start = 0;
-    for (int i = path.length - 1; i >= 0; i--) {
-      if (path[i] == "\\") {
-        start = i;
-        break;
-      }
-    }
-    return start;
-  }
-
-  Future<String> findFolder(String path) async {
-    var dir = Directory(path);
-    String temp = "";
-    String ret = "";
-    int count = 0;
-    var indexes = [];
-
-    await for (var entity in dir.list(recursive: true, followLinks: false)) {
-      if (entity.path.contains("DecryptedFiles")) {
-        temp = entity.path;
-      }
-    }
-
-    for (int i = 0; i < temp.length; i++) {
-      if (temp[i] == "\\") {
-        indexes.add(i);
-      }
-    }
-    return temp.substring(indexes[indexes.length - 1]);
-  }
-
-  Future<List<String>> listFiles(String path) async {
-    var dir = Directory(path);
-    List<String> files = [];
-
-    await for (var entity in dir.list(recursive: true, followLinks: false)) {
-      if (!entity.path.contains("DecryptedFiles") &&
-          !entity.path.contains("EncryptedFiles")) {
-        files.add(entity.path);
-      }
-    }
-    return files;
   }
 
   Future<List<File>> pickKeys() async {
@@ -159,12 +139,71 @@ class _DecryptPageState extends State<DecryptPage> {
     return files;
   }
 
+  Future<String> readPrivKey(String pathToPubKey) async {
+    try {
+      final file = File(pathToPubKey);
+
+      final contents = await file.readAsString();
+
+      setState(() {
+        privKey = contents;
+      });
+
+      return contents;
+    } catch (e) {
+      return "";
+    }
+  }
+
+  Future<String> readAesKey(String pathToAesKey) async {
+    try {
+      final file = File(pathToAesKey);
+
+      final contents = await file.readAsString();
+
+      setState(() {
+        aesKey = contents;
+      });
+
+      return contents;
+    } catch (e) {
+      return "";
+    }
+  }
+
+  Future<String> pickPrivKey() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+
+    if (result != null) {
+      setState(() {
+        privKeyDirectory = result.files.single.path!;
+      });
+    } else {
+      privateKeyController.text = currentDirectory;
+    }
+
+    return "";
+  }
+
+  Future<String> pickAesKey() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+
+    if (result != null) {
+      setState(() {
+        aesKeyDirectory = result.files.single.path!;
+      });
+    } else {
+      aesKeyController.text = currentDirectory;
+    }
+
+    return "";
+  }
+
   @override
   Widget build(BuildContext context) {
     EncryptionService es = EncryptionService();
     Requirments requirments = Get.put(Requirments());
     CountController cc = Get.put(CountController());
-    //saveController.text = directory == "" ? currentDirectory : directory;
     if (saveController.text == "" && tempString == "" && directory == "") {
       saveController.text = currentDirectory;
     }
@@ -174,11 +213,43 @@ class _DecryptPageState extends State<DecryptPage> {
     if (saveController.text == "" && tempString == "" && directory != "") {
       saveController.text = directory;
     }
-    return _isVisible ? DecryptWidget(es) : DecryptSummary(requirments, es, cc);
-    //return DecryptSummary(requirments, es, cc);
+
+    if (privateKeyController.text == "" &&
+        tempStrForPriv == "" &&
+        privKeyDirectory == "") {
+      privateKeyController.text = currentDirectory;
+    }
+    if (privateKeyController.text == "" &&
+        tempStrForPriv != "" &&
+        privKeyDirectory == "") {
+      privateKeyController.text = tempString;
+    }
+    if (privateKeyController.text == "" &&
+        tempStrForPriv == "" &&
+        privKeyDirectory != "") {
+      privateKeyController.text = privKeyDirectory;
+    }
+
+    if (aesKeyController.text == "" &&
+        tempStrForAes == "" &&
+        aesKeyDirectory == "") {
+      aesKeyController.text = currentDirectory;
+    }
+    if (aesKeyController.text == "" &&
+        tempStrForAes != "" &&
+        aesKeyDirectory == "") {
+      aesKeyController.text = tempString;
+    }
+    if (aesKeyController.text == "" &&
+        tempStrForAes == "" &&
+        aesKeyDirectory != "") {
+      aesKeyController.text = aesKeyDirectory;
+    }
+    return _isVisible ? DecryptWidget(es) : decryptSummary(requirments, es, cc);
+    //return decryptSummary(requirments, es, cc);
   }
 
-  AnimatedOpacity DecryptSummary(
+  AnimatedOpacity decryptSummary(
       Requirments requirments, EncryptionService es, CountController cc) {
     return AnimatedOpacity(
       opacity: 1,
@@ -332,11 +403,11 @@ class _DecryptPageState extends State<DecryptPage> {
                                                 child: Text(e),
                                               ))
                                           .toList(),
-                                      value: _RSAEnabled,
+                                      value: rsaEnabled,
                                       onChanged: (v) {
                                         if (v != null) {
                                           setState(() {
-                                            _RSAEnabled = v.toString();
+                                            rsaEnabled = v.toString();
                                           });
                                         }
                                       },
@@ -368,106 +439,96 @@ class _DecryptPageState extends State<DecryptPage> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 20),
-                              if (_RSAEnabled == "Yes") ...[
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        const Text(
-                                          "Key Paths:",
-                                          style: TextStyle(
-                                            color: Color(0xFFf06b76),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        IconButton(
-                                          icon: const Icon(
-                                            FluentIcons.file_request,
-                                            size: 15,
-                                          ),
-                                          onPressed: () {
-                                            showDialog(
-                                              context: context,
-                                              builder: (BuildContext context) {
-                                                return ContentDialog(
-                                                  actions: [
-                                                    TextButton(
-                                                      child: const Text(
-                                                        "Okay",
-                                                        style: TextStyle(
-                                                          color:
-                                                              Color(0xFFf06b76),
-                                                        ),
-                                                      ),
-                                                      onPressed: () {
-                                                        Navigator.pop(context);
-                                                        setState(() async {
-                                                          keys =
-                                                              await pickKeys();
-                                                        });
-                                                      },
-                                                    ),
-                                                  ],
-                                                  backgroundDismiss: true,
-                                                  title: const Text(
-                                                    "Warning",
-                                                    style: TextStyle(
-                                                      color: Color(0xFFf06b76),
-                                                    ),
-                                                  ),
-                                                  content: const Text(
-                                                    "Pick 'aes.txt' and 'priv.txt' or it will not work",
-                                                  ),
-                                                );
-                                              },
-                                            );
-                                          },
-                                        ),
-                                      ],
+                              if (rsaEnabled == "Yes") ...[
+                                const SizedBox(height: 20),
+                                TextBox(
+                                  toolbarOptions: const ToolbarOptions(
+                                    copy: true,
+                                    cut: true,
+                                    paste: true,
+                                    selectAll: true,
+                                  ),
+                                  controller: privateKeyController,
+                                  header: "Pick your private key:",
+                                  headerStyle: const TextStyle(
+                                    color: Color(0xFFf06b76),
+                                  ),
+                                  style: const TextStyle(fontSize: 12),
+                                  suffix: IconButton(
+                                    onPressed: () async {
+                                      await pickPrivKey();
+                                      setState(() {
+                                        privateKeyController.text =
+                                            privKeyDirectory;
+                                      });
+                                    },
+                                    icon: const Icon(
+                                      FluentIcons.open_folder_horizontal,
+                                      color: Color(0xFFf06b76),
                                     ),
-                                    const SizedBox(height: 10),
-                                    Row(
-                                      children: [
-                                        const Text(
-                                          "AES key path:",
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Text(
-                                          keys.isEmpty ? "Empty" : keys[0].path,
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            color: Color(0xFFf06b76),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Row(
-                                      children: [
-                                        const Text(
-                                          "RSA key path:",
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Text(
-                                          keys.isEmpty ? "Empty" : keys[0].path,
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            color: Color(0xFFf06b76),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
+                                  ),
+                                  onSubmitted: (v) {
+                                    setState(() {
+                                      tempStrForPriv = v;
+                                    });
+                                    privateKeyController.text = tempStrForPriv;
+                                  },
                                 ),
-                              ] else ...[
+                                const SizedBox(height: 20),
+                                Divider(
+                                  style: DividerThemeData(
+                                    thickness: 1,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.withOpacity(.40),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+                                TextBox(
+                                  toolbarOptions: const ToolbarOptions(
+                                    copy: true,
+                                    cut: true,
+                                    paste: true,
+                                    selectAll: true,
+                                  ),
+                                  controller: aesKeyController,
+                                  header: "Pick the AES key:",
+                                  headerStyle: const TextStyle(
+                                    color: Color(0xFFf06b76),
+                                  ),
+                                  style: const TextStyle(fontSize: 12),
+                                  suffix: IconButton(
+                                    onPressed: () async {
+                                      await pickAesKey();
+                                      setState(() {
+                                        aesKeyController.text = aesKeyDirectory;
+                                      });
+                                    },
+                                    icon: const Icon(
+                                      FluentIcons.open_folder_horizontal,
+                                      color: Color(0xFFf06b76),
+                                    ),
+                                  ),
+                                  onSubmitted: (v) {
+                                    setState(() {
+                                      tempStrForAes = v;
+                                    });
+                                    aesKeyController.text = tempStrForAes;
+                                  },
+                                ),
+                                const SizedBox(height: 20),
+                                Divider(
+                                  style: DividerThemeData(
+                                    thickness: 1,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.withOpacity(.40),
+                                    ),
+                                  ),
+                                ),
+                              ] else
+                                ...[],
+                              const SizedBox(height: 20),
+                              if (rsaEnabled == "No") ...[
                                 TextBox(
                                   toolbarOptions: const ToolbarOptions(
                                     copy: true,
@@ -489,17 +550,17 @@ class _DecryptPageState extends State<DecryptPage> {
                                     });
                                   },
                                 ),
-                              ],
-                              const SizedBox(height: 20),
-                              Divider(
-                                style: DividerThemeData(
-                                  thickness: 1,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.withOpacity(.40),
+                                const SizedBox(height: 20),
+                                Divider(
+                                  style: DividerThemeData(
+                                    thickness: 1,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.withOpacity(.40),
+                                    ),
                                   ),
                                 ),
-                              ),
-                              const SizedBox(height: 20),
+                                const SizedBox(height: 20)
+                              ],
                               TextBox(
                                 toolbarOptions: const ToolbarOptions(
                                   copy: true,
@@ -569,7 +630,7 @@ class _DecryptPageState extends State<DecryptPage> {
                             Text(
                               "RSA enabled: ",
                               style: TextStyle(
-                                color: _RSAEnabled == "Yes"
+                                color: rsaEnabled == "Yes"
                                     ? Colors.white
                                     : const Color(0xFFD3D3D3).withOpacity(.80),
                                 fontSize: 12,
@@ -577,38 +638,86 @@ class _DecryptPageState extends State<DecryptPage> {
                             ),
                             const SizedBox(width: 10),
                             Icon(
-                              _RSAEnabled == "Yes"
+                              rsaEnabled == "Yes"
                                   ? FluentIcons.accept
                                   : FluentIcons.status_circle_error_x,
-                              color: _RSAEnabled == "Yes"
-                                  ? const Color(0xFF66FF00)
+                              color: rsaEnabled == "Yes"
+                                  ? const Color(0xFFf06b76)
                                   : const Color(0xFFD3D3D3).withOpacity(.80),
                             ),
                           ],
                         ),
                         const SizedBox(height: 20),
-                        Row(
-                          children: [
-                            Text(
-                              "Password: ",
-                              style: TextStyle(
+                        if (rsaEnabled == "Yes") ...[
+                          Row(
+                            children: [
+                              Text(
+                                "Private Key: ",
+                                style: TextStyle(
+                                  color: privateKeyController.text.isEmpty
+                                      ? const Color(0xFFD3D3D3).withOpacity(.80)
+                                      : Colors.white,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Icon(
+                                privateKeyController.text.isEmpty
+                                    ? FluentIcons.status_circle_error_x
+                                    : FluentIcons.accept,
+                                color: privateKeyController.text.isEmpty
+                                    ? const Color(0xFFD3D3D3).withOpacity(.80)
+                                    : const Color(0xFFf06b76),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          Row(
+                            children: [
+                              Text(
+                                "AES Key: ",
+                                style: TextStyle(
+                                  color: aesKeyController.text.isEmpty
+                                      ? const Color(0xFFD3D3D3).withOpacity(.80)
+                                      : Colors.white,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Icon(
+                                aesKeyController.text.isEmpty
+                                    ? FluentIcons.status_circle_error_x
+                                    : FluentIcons.accept,
+                                color: aesKeyController.text.isEmpty
+                                    ? const Color(0xFFD3D3D3).withOpacity(.80)
+                                    : const Color(0xFFf06b76),
+                              ),
+                            ],
+                          ),
+                        ] else ...[
+                          Row(
+                            children: [
+                              Text(
+                                "Password: ",
+                                style: TextStyle(
+                                  color: passwordController.text.isEmpty
+                                      ? const Color(0xFFD3D3D3).withOpacity(.80)
+                                      : Colors.white,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Icon(
+                                passwordController.text.isEmpty
+                                    ? FluentIcons.status_circle_error_x
+                                    : FluentIcons.accept,
                                 color: passwordController.text.isEmpty
                                     ? const Color(0xFFD3D3D3).withOpacity(.80)
-                                    : Colors.white,
-                                fontSize: 12,
+                                    : const Color(0xFFf06b76),
                               ),
-                            ),
-                            const SizedBox(width: 10),
-                            Icon(
-                              passwordController.text.isEmpty
-                                  ? FluentIcons.status_circle_error_x
-                                  : FluentIcons.accept,
-                              color: passwordController.text.isEmpty
-                                  ? const Color(0xFFf06b76)
-                                  : const Color(0xFF66FF00),
-                            ),
-                          ],
-                        ),
+                            ],
+                          ),
+                        ],
                         const SizedBox(height: 20),
                         Row(
                           children: [
@@ -629,31 +738,8 @@ class _DecryptPageState extends State<DecryptPage> {
                                   : FluentIcons.accept,
                               color: _useDefaultLocaiton == false &&
                                       directory == ""
-                                  ? const Color(0xFFf06b76)
-                                  : const Color(0xFF66FF00),
-                            ),
-                            const SizedBox(width: 10),
-                            GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _useDefaultLocaiton = true;
-                                  saveController.text = currentDirectory;
-                                });
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF272727),
-                                  borderRadius: BorderRadius.circular(3),
-                                ),
-                                child: const Text(
-                                  "Use default",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Color(0xFFf06b76),
-                                  ),
-                                ),
-                              ),
+                                  ? const Color(0xFFD3D3D3).withOpacity(.80)
+                                  : const Color(0xFFf06b76),
                             ),
                           ],
                         ),
@@ -664,32 +750,97 @@ class _DecryptPageState extends State<DecryptPage> {
                               GestureDetector(
                                 onTap: () async {
                                   if (passwordController.text.isNotEmpty &&
-                                      saveController.text.isNotEmpty) {
-                                    _createFolder(saveController.text);
+                                          saveController.text.isNotEmpty ||
+                                      privateKeyController.text.isNotEmpty &&
+                                          aesKeyController.text.isNotEmpty &&
+                                          saveController.text.isNotEmpty) {
+                                    await createFolder(
+                                        saveController.text, "DecryptedFiles");
 
-                                    String folderName =
-                                        await findFolder(saveController.text);
+                                    final temp =
+                                        await getApplicationDocumentsDirectory();
 
-                                    for (final i in _list) {
-                                      es.aesDecrypt(
-                                        i.path,
-                                        privKey,
-                                        saveController.text,
-                                        es.withoutDotAes(i.path)[2],
+                                    setState(() {
+                                      documentsDirectory = temp.path;
+                                    });
+
+                                    if (rsaEnabled == "Yes") {
+                                      String inBetween = saveController.text
+                                          .substring(documentsDirectory.length);
+
+                                      String pathWithoutKeys =
+                                          documentsDirectory + inBetween;
+
+                                      String pathWithKeys = Path.join(
+                                          pathWithoutKeys, "DecryptedFiles");
+
+                                      await readPrivKey(
+                                        privateKeyController.text,
                                       );
-                                    }
 
-                                    List<String> currentFiles =
-                                        await listFiles(saveController.text);
+                                      await readAesKey(aesKeyController.text);
 
-                                    for (final i in currentFiles) {
-                                      int index = findInsert(i);
-                                      await File(i).rename(
-                                        i.substring(0, index) +
-                                            folderName +
-                                            i.substring(index),
-                                      );
-                                      cc.increment2();
+                                      final key =
+                                          RSAPrivateKey.fromString(privKey);
+
+                                      String aesDecrypted = key.decrypt(aesKey);
+
+                                      for (final i in _list) {
+                                        String fileName = Path.basename(i.path);
+                                        es.aesDecrypt(
+                                          i.path,
+                                          aesDecrypted,
+                                          Path.join(pathWithKeys, fileName),
+                                        );
+                                        cc.increment();
+
+                                        Future.delayed(
+                                            const Duration(seconds: 3), () {
+                                          setState(() {
+                                            cc.count = 0.obs;
+                                          });
+                                        });
+
+                                        setState(() {
+                                          passwordController.text = "";
+                                          saveController.text = "";
+                                          aesKeyController.text = "";
+                                          privateKeyController.text = "";
+                                        });
+                                      }
+                                    } else {
+                                      String inBetween = saveController.text
+                                          .substring(documentsDirectory.length);
+
+                                      String pathWithoutKeys =
+                                          documentsDirectory + inBetween;
+
+                                      String pathWithKeys = Path.join(
+                                          pathWithoutKeys, "DecryptedFiles");
+
+                                      for (final i in _list) {
+                                        String fileName = Path.basename(i.path);
+                                        es.aesDecrypt(
+                                          i.path,
+                                          passwordController.text,
+                                          Path.join(pathWithKeys, fileName),
+                                        );
+                                        cc.increment();
+                                      }
+
+                                      Future.delayed(const Duration(seconds: 3),
+                                          () {
+                                        setState(() {
+                                          cc.count = 0.obs;
+                                        });
+                                      });
+
+                                      setState(() {
+                                        passwordController.text = "";
+                                        saveController.text = "";
+                                        aesKeyController.text = "";
+                                        privateKeyController.text = "";
+                                      });
                                     }
                                   } else {
                                     showDialog(

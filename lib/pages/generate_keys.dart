@@ -97,6 +97,11 @@ class _RSAKeyGeneratePageState extends State<RSAKeyGeneratePage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   void dispose() {
     pathController.dispose();
     super.dispose();
@@ -278,6 +283,10 @@ class _RSAKeyGeneratePageState extends State<RSAKeyGeneratePage> {
 
                               setState(() {
                                 showText = true;
+                              });
+
+                              setState(() {
+                                pathController.text = currentDirectory;
                               });
                             }
                           }

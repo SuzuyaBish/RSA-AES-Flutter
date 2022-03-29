@@ -55,8 +55,7 @@ class EncryptionService {
     }
   }
 
-  void aesDecrypt(String filePath, String password, String destinationFilePath,
-      String fileName) {
+  void aesDecrypt(String filePath, String password, String destinationFilePath) {
     String srcFilePath = filePath;
 
     var crypt = AesCrypt();
@@ -64,7 +63,7 @@ class EncryptionService {
 
     try {
       decFilePath =
-          crypt.decryptFileSync(srcFilePath, destinationFilePath + fileName);
+          crypt.decryptFileSync(srcFilePath, destinationFilePath);
     } on AesCryptException catch (e) {
       if (e.type == AesCryptExceptionType.destFileExists) {
         print(e.message);
