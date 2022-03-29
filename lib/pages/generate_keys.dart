@@ -31,12 +31,6 @@ class _RSAKeyGeneratePageState extends State<RSAKeyGeneratePage> {
 
   RSAKeypair rsaKeypair = RSAKeypair.fromRandom();
 
-  @override
-  void dispose() {
-    pathController.dispose();
-    super.dispose();
-  }
-
   void pickFolder() async {
     String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
 
@@ -64,32 +58,6 @@ class _RSAKeyGeneratePageState extends State<RSAKeyGeneratePage> {
       });
       path.create();
     }
-  }
-
-  int findInsertsKeys(String path) {
-    int start = 0;
-    int count = 0;
-    for (int i = path.length - 1; i >= 0; i--) {
-      if (path[i] == "\\") {
-        count++;
-      }
-      if (count == 2) {
-        start = i;
-        break;
-      }
-    }
-    return start;
-  }
-
-  int findInsertFilePath(String path) {
-    int start = 0;
-    for (int i = path.length - 1; i >= 0; i--) {
-      if (path[i] == "\\") {
-        start = i;
-        break;
-      }
-    }
-    return start;
   }
 
   Future<String> get _localPath async {
@@ -126,6 +94,12 @@ class _RSAKeyGeneratePageState extends State<RSAKeyGeneratePage> {
     });
 
     return file.writeAsString(rsaKeypair.publicKey.toString());
+  }
+
+  @override
+  void dispose() {
+    pathController.dispose();
+    super.dispose();
   }
 
   @override
@@ -262,13 +236,6 @@ class _RSAKeyGeneratePageState extends State<RSAKeyGeneratePage> {
                           } else {
                             if (pathController.text.length ==
                                 documentsDirectory.length) {
-                              String folderPath = pathController.text;
-
-                              String tempKeysPath = Path.join(
-                                folderPath,
-                                "Keys",
-                              );
-
                               String documentsAndKeys =
                                   Path.join(pathController.text, "Keys");
 

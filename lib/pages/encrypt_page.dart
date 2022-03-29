@@ -29,6 +29,7 @@ class _EncryptPageState extends State<EncryptPage> {
   bool _dragging = false;
   bool _isChecked = false;
   String directory = "";
+  String pubKeyDirectory = "";
   bool _tempIsVisible = true;
   bool _isVisible = true;
   bool _isExpanded = false;
@@ -39,9 +40,11 @@ class _EncryptPageState extends State<EncryptPage> {
   bool _useDefaultLocaiton = false;
   int count = 0;
   int actual = 0;
+  String tempStrForPub = "";
 
   TextEditingController passwordController = TextEditingController();
   TextEditingController saveController = TextEditingController();
+  TextEditingController theirPubKeyPathController = TextEditingController();
 
   ScrollController scrollController1 = ScrollController();
   ScrollController scrollController2 = ScrollController();
@@ -50,6 +53,13 @@ class _EncryptPageState extends State<EncryptPage> {
   String pubKeyPath = "";
   String privKeyPath = "";
   String aesKeyPath = "";
+
+  String keysDirectoryPath = "";
+  bool keysPathExists = false;
+  String documentsDirectory = "";
+
+  String pubKey = "";
+  String aesKey = "";
 
   void pickFolder() async {
     String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
@@ -62,7 +72,20 @@ class _EncryptPageState extends State<EncryptPage> {
       setState(() {
         directory = selectedDirectory.toString();
       });
-      print(directory);
+    }
+  }
+
+  void pickFolder2() async {
+    String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
+
+    if (selectedDirectory == null) {
+      setState(() {
+        theirPubKeyPathController.text = currentDirectory;
+      });
+    } else {
+      setState(() {
+        pubKeyDirectory = selectedDirectory.toString();
+      });
     }
   }
 
@@ -77,12 +100,17 @@ class _EncryptPageState extends State<EncryptPage> {
     return path.substring(start);
   }
 
-  _createFolder(String savePath, [String folderName = "EncryptedFiles"]) async {
+  createFolder(String savePath, [String folderName = "EncryptedFiles"]) async {
     final path = Directory(savePath + "/" + folderName);
 
     if ((await path.exists())) {
-      print("Path exists");
+      setState(() {
+        keysPathExists = true;
+      });
     } else {
+      setState(() {
+        keysDirectoryPath = path.path;
+      });
       path.create();
     }
   }
@@ -122,55 +150,55 @@ class _EncryptPageState extends State<EncryptPage> {
 
   Future<String> get _localPath async {
     final dir = await getApplicationDocumentsDirectory();
-    print(dir.path);
     return dir.path;
   }
 
   Future<File> get _localFile async {
     final path = await _localPath;
-    return File('$path\\priv.txt');
-  }
-
-  Future<File> get _localFile2 async {
-    final path = await _localPath;
-    return File('$path\\pub.txt');
-  }
-
-  Future<File> get _localFile3 async {
-    final path = await _localPath;
     return File('$path\\aes.txt');
   }
 
-  Future<File> writeContent() async {
+  Future<File> writeContent(String aesKey) async {
     final file = await _localFile;
-
-    setState(() {
-      privKeyPath = file.path;
-    });
-
-    return file.writeAsString(rsaKeypair.privateKey.toString());
-  }
-
-  Future<File> writeContent2() async {
-    final file = await _localFile2;
-
-    setState(() {
-      pubKeyPath = file.path;
-    });
-
-    return file.writeAsString(rsaKeypair.publicKey.toString());
-  }
-
-  Future<File> writeContent3() async {
-    final file = await _localFile3;
-    String encrypted = rsaKeypair.publicKey.encrypt(passwordController.text);
 
     setState(() {
       aesKeyPath = file.path;
     });
 
-    return file.writeAsString(encrypted);
+    return file.writeAsString(aesKey);
   }
+
+  Future<String> readPubKey(String pathToPubKey) async {
+    try {
+      final file = File(pathToPubKey);
+
+      final contents = await file.readAsString();
+
+      setState(() {
+        pubKey = contents;
+      });
+
+      return contents;
+    } catch (e) {
+      return "";
+    }
+  }
+
+  // Future<String> readAESKey(String pathToAESKey) async {
+  //   try {
+  //     final file = File(pathToAESKey);
+
+  //     final contents = await file.readAsString();
+
+  //     setState(() {
+  //       aesKey = contents;
+  //     });
+
+  //     return contents;
+  //   } catch (e) {
+  //     return "";
+  //   }
+  // }
 
   Future<List<String>> listFiles(String path) async {
     var dir = Directory(path);
@@ -210,6 +238,20 @@ class _EncryptPageState extends State<EncryptPage> {
     return start;
   }
 
+  Future<String> pickPubKey() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+
+    if (result != null) {
+      setState(() {
+        pubKeyDirectory = result.files.single.path!;
+      });
+    } else {
+      theirPubKeyPathController.text = currentDirectory;
+    }
+
+    return "";
+  }
+
   @override
   void initState() {
     scrollController1;
@@ -222,6 +264,7 @@ class _EncryptPageState extends State<EncryptPage> {
   void dispose() {
     passwordController.dispose();
     saveController.dispose();
+    theirPubKeyPathController.dispose();
     super.dispose();
   }
 
@@ -230,7 +273,6 @@ class _EncryptPageState extends State<EncryptPage> {
     EncryptionService es = EncryptionService();
     Requirments requirments = Get.put(Requirments());
     CountController cc = Get.put(CountController());
-    //saveController.text = directory == "" ? currentDirectory : directory;
     if (saveController.text == "" && tempString == "" && directory == "") {
       saveController.text = currentDirectory;
     }
@@ -240,11 +282,27 @@ class _EncryptPageState extends State<EncryptPage> {
     if (saveController.text == "" && tempString == "" && directory != "") {
       saveController.text = directory;
     }
-    return _isVisible ? EncryptWidget(es) : EncryptSummary(requirments, es, cc);
+
+    if (theirPubKeyPathController.text == "" &&
+        tempStrForPub == "" &&
+        pubKeyDirectory == "") {
+      theirPubKeyPathController.text = currentDirectory;
+    }
+    if (theirPubKeyPathController.text == "" &&
+        tempStrForPub != "" &&
+        pubKeyDirectory == "") {
+      theirPubKeyPathController.text = tempString;
+    }
+    if (theirPubKeyPathController.text == "" &&
+        tempStrForPub == "" &&
+        pubKeyDirectory != "") {
+      theirPubKeyPathController.text = directory;
+    }
+    return _isVisible ? encryptWidget(es) : encryptSummary(requirments, es, cc);
     //return EncryptSummary(requirments, es, cc);
   }
 
-  AnimatedOpacity EncryptSummary(
+  AnimatedOpacity encryptSummary(
       Requirments requirments, EncryptionService es, CountController cc) {
     return AnimatedOpacity(
       opacity: 1,
@@ -362,7 +420,6 @@ class _EncryptPageState extends State<EncryptPage> {
                                           _isExpanded = true;
                                         });
                                       }
-                                      print(saveController.text);
                                     },
                                   ),
                                 ],
@@ -425,15 +482,71 @@ class _EncryptPageState extends State<EncryptPage> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 20),
-                              Divider(
-                                style: DividerThemeData(
-                                  thickness: 1,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.withOpacity(.40),
+                              if (_RSAEnabled == "Yes") ...[
+                                const SizedBox(height: 20),
+                                Divider(
+                                  style: DividerThemeData(
+                                    thickness: 1,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.withOpacity(.40),
+                                    ),
                                   ),
                                 ),
-                              ),
+                                const SizedBox(height: 20),
+                                TextBox(
+                                  toolbarOptions: const ToolbarOptions(
+                                    copy: true,
+                                    cut: true,
+                                    paste: true,
+                                    selectAll: true,
+                                  ),
+                                  controller: theirPubKeyPathController,
+                                  header: "Pick their public key:",
+                                  headerStyle: const TextStyle(
+                                    color: Color(0xFFf06b76),
+                                  ),
+                                  style: const TextStyle(fontSize: 12),
+                                  suffix: IconButton(
+                                    onPressed: () async {
+                                      await pickPubKey();
+                                      setState(() {
+                                        theirPubKeyPathController.text =
+                                            pubKeyDirectory;
+                                      });
+                                    },
+                                    icon: const Icon(
+                                      FluentIcons.open_folder_horizontal,
+                                      color: Color(0xFFf06b76),
+                                    ),
+                                  ),
+                                  onSubmitted: (v) {
+                                    setState(() {
+                                      tempStrForPub = v;
+                                    });
+                                    theirPubKeyPathController.text =
+                                        tempStrForPub;
+                                  },
+                                ),
+                                const SizedBox(height: 20),
+                                Divider(
+                                  style: DividerThemeData(
+                                    thickness: 1,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.withOpacity(.40),
+                                    ),
+                                  ),
+                                ),
+                              ] else ...[
+                                const SizedBox(height: 20),
+                                Divider(
+                                  style: DividerThemeData(
+                                    thickness: 1,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.withOpacity(.40),
+                                    ),
+                                  ),
+                                ),
+                              ],
                               const SizedBox(height: 20),
                               TextBox(
                                 toolbarOptions: const ToolbarOptions(
@@ -485,7 +598,6 @@ class _EncryptPageState extends State<EncryptPage> {
                                     setState(() {
                                       saveController.text = directory;
                                     });
-                                    print(saveController.text);
                                   },
                                   icon: const Icon(
                                     FluentIcons.open_folder_horizontal,
@@ -631,108 +743,81 @@ class _EncryptPageState extends State<EncryptPage> {
                                 onTap: () async {
                                   if (passwordController.text.isNotEmpty &&
                                       saveController.text.isNotEmpty) {
+                                    await createFolder(
+                                        saveController.text, "EncryptedFiles");
+
+                                    final temp =
+                                        await getApplicationDocumentsDirectory();
+
+                                    setState(() {
+                                      documentsDirectory = temp.path;
+                                    });
                                     if (_RSAEnabled == "Yes") {
-                                      _createFolder(saveController.text);
+                                      String inBetween = saveController.text
+                                          .substring(documentsDirectory.length);
 
-                                      String folderName =
-                                          await findFolder(saveController.text);
+                                      String pathWithoutKeys =
+                                          documentsDirectory + inBetween;
+
+                                      String pathWithKeys = Path.join(
+                                          pathWithoutKeys, "EncryptedFiles");
 
                                       for (final i in _list) {
+                                        String fileName = Path.basename(i.path);
                                         es.aesEncrypt(
                                           i.path,
                                           passwordController.text,
-                                          saveController.text,
-                                          es.withoutDotAes(i.path)[2],
+                                          Path.join(pathWithKeys, fileName),
                                         );
-                                      }
-
-                                      String encryptedPassword = rsaKeypair
-                                          .publicKey
-                                          .encrypt(passwordController.text);
-
-                                      List<String> currentFiles =
-                                          await listFiles(saveController.text);
-
-                                      String folderPath = saveController.text;
-
-                                      for (final i in currentFiles) {
-                                        int index = findInsert(i);
-                                        await File(i).rename(
-                                          i.substring(0, index) +
-                                              folderName +
-                                              i.substring(index),
-                                        );
-
                                         cc.increment();
+
+                                        await readPubKey(
+                                            theirPubKeyPathController.text);
+
+                                        final key =
+                                            RSAPublicKey.fromString(pubKey);
+
+                                        String aesEncrypted = key
+                                            .encrypt(passwordController.text);
+
+                                        await writeContent(aesEncrypted);
+
+                                        File(aesKeyPath).rename(
+                                            Path.join(pathWithKeys, "aes.txt"));
+
+                                        Future.delayed(
+                                            const Duration(seconds: 3), () {
+                                          setState(() {
+                                            cc.count = 0.obs;
+                                          });
+                                        });
                                       }
-
-                                      _createFolder(folderPath, "Keys");
-
-                                      String tempKeysPath =
-                                          Path.join(folderPath, "Keys");
-
-                                      await writeContent();
-
-                                      await File(privKeyPath).rename(privKeyPath
-                                              .substring(
-                                                  0,
-                                                  findInsertFilePath(
-                                                      privKeyPath)) +
-                                          tempKeysPath.substring(
-                                              findInsertsKeys(tempKeysPath)) +
-                                          privKeyPath.substring(
-                                              findInsertFilePath(privKeyPath)));
-
-                                      await writeContent2();
-
-                                      await File(pubKeyPath).rename(pubKeyPath
-                                              .substring(
-                                                  0,
-                                                  findInsertFilePath(
-                                                      pubKeyPath)) +
-                                          tempKeysPath.substring(
-                                              findInsertsKeys(tempKeysPath)) +
-                                          pubKeyPath.substring(
-                                              findInsertFilePath(pubKeyPath)));
-
-                                      await writeContent3();
-
-                                      await File(aesKeyPath).rename(aesKeyPath
-                                              .substring(
-                                                  0,
-                                                  findInsertFilePath(
-                                                      aesKeyPath)) +
-                                          tempKeysPath.substring(
-                                              findInsertsKeys(tempKeysPath)) +
-                                          aesKeyPath.substring(
-                                              findInsertFilePath(aesKeyPath)));
                                     } else {
-                                      _createFolder(saveController.text);
+                                      String inBetween = saveController.text
+                                          .substring(documentsDirectory.length);
 
-                                      String folderName =
-                                          await findFolder(saveController.text);
+                                      String pathWithoutKeys =
+                                          documentsDirectory + inBetween;
+
+                                      String pathWithKeys = Path.join(
+                                          pathWithoutKeys, "EncryptedFiles");
 
                                       for (final i in _list) {
+                                        String fileName = Path.basename(i.path);
                                         es.aesEncrypt(
                                           i.path,
                                           passwordController.text,
-                                          saveController.text,
-                                          es.withoutDotAes(i.path)[2],
-                                        );
-                                      }
-
-                                      List<String> currentFiles =
-                                          await listFiles(saveController.text);
-
-                                      for (final i in currentFiles) {
-                                        int index = findInsert(i);
-                                        await File(i).rename(
-                                          i.substring(0, index) +
-                                              folderName +
-                                              i.substring(index),
+                                          Path.join(pathWithKeys, fileName),
                                         );
                                         cc.increment();
                                       }
+
+                                      Future.delayed(const Duration(seconds: 3),
+                                          () {
+                                        setState(() {
+                                          cc.count = 0.obs;
+                                        });
+                                      });
                                     }
                                   } else {
                                     showDialog(
@@ -821,7 +906,7 @@ class _EncryptPageState extends State<EncryptPage> {
     );
   }
 
-  AnimatedOpacity EncryptWidget(EncryptionService es) {
+  AnimatedOpacity encryptWidget(EncryptionService es) {
     return AnimatedOpacity(
       opacity: _tempIsVisible ? 1 : 0,
       duration: const Duration(seconds: 1),
@@ -866,13 +951,6 @@ class _EncryptPageState extends State<EncryptPage> {
                       _isVisible = false;
                     });
                   });
-
-                  // for (final i in _list) {
-                  //   print(i.path);
-                  //   es.aesEncrypt(i.path, "123", directory, fileName(i.path));
-                  //   es.aesDecrypt(i.path, "123");
-
-                  // }
                 },
                 onDragUpdated: (details) {
                   setState(() {

@@ -43,6 +43,9 @@ class _DecryptPageState extends State<DecryptPage> {
   ScrollController scrollController1 = ScrollController();
   ScrollController scrollController2 = ScrollController();
 
+  String privKey =
+      "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCZJa//qrZ1NYFOs6Pt7kHCztJSlHoGmNQt3+l7JAAFVAfZaUalGE5sDZIj0mnYluwRe4g937avfZ1UUY5hCOddE9DEecaKlnJcDPfcLLcnHTnidbZpFbzlysvsB9QANNHv6X8aaDZemJsg+BHt/oLTStNEfQMH0QEaFrL+IBGzwZLdl/5DIAEOgMofgbgtQ5Bb/AjhgvXyqTzprKcBonv37xZHloFCDbIN1Z7rAta+xwcNgaBQd+W2FkoB1YiOnLW4JT5e3oFJ0cCYBGA3lTMuXi2rZm++2VksI3fEcP5iGkJ7RKVxHxKsAAySJ/9hWq/P3Fy31b0duNj3IejQD7YTAgMBAAECggEBAIXLNhpPYv29E83VBSctmof9tiNtEbpHtD6rusfY6Ke/BOh8n7pGJOUjagQfpFcTawPO/3TGyExCmrt6UMAXTkGzuRSdKsYSr7AZqETTT+M9Fj/xBL6DvjanWEZJhH31p19Ih8FjP/SesBA6iTd5vYOogC/6YzZl8ud+4zs+exilZjbKHlRHIniEE8KXj1KYilmNyt2Z9PDkdj6ktN0PmEBozgVV4mSIi47frwWHaMfZ6L2XskyLCZTSsTWD2YNW/x2v80J2+kne3oSETla5DaU618NRqDFeX7Qt9ufN9YGu7/bnwbP76ts7j54JhsW04Du5oFAVR0pt1el3hA9fPckCgYEA+csO6xs5fTSFSIETatIjq5xxMxs32wy+R7q+QjEqHMaGMJzteE41Z8ztMN5rfovuIWnflXOhuNti1vCht7c7+CtegWEhwZ8kP7NqmC/BzGlSj1Qzuc/+doNp6b8hGmxhrfgxEx3JcGhYb0hnGr3vI8svZogDNjmERtbVW0TVplUCgYEAnPPcgeJMndlIUPbn8ltct0MTgU+2eqeQlIvX7+JG7FTpOU4EVYnL8KuxcFHSW90mDwyn15OdRPWUrIRc7tw7OrJKI4u5dqSxzZYPWTF4Eg+i+6HLTEKNx15kZmAcHwkHvqdtwy3mDPgqSWDfoRFzGDqN9UDtN+0qRaT+gDczwscCgYAQxUFLJ5jEfzIzm/bhxRn/+5DeDYXCfyiHSFJdv09Ef0+jE+YdnaKYRXnnPgeZh2uFcsZAEnNZJeGM7Lruyq6MCt1dclgB191nKXSOoyYvwyJ33P9cCkrbShdiSiK+02f7dh5VWjqcAWVukz3Y3cegb5PPHnKYwWPQHbxVVFnDwQKBgEC2NwuCT46hgLSJKJb/XlndGRSu1hD6N51Xjz/DrvRQChzrctQFzYU8dRtXUQE5TDDWSfmTTjuZeaQrqtl9ChqoWfMP7/bf7sNSBKAEynm/4rYXPmgB5Mz3uTOQmuec5ImSJKpdqUVdqKm6fFm/hRHPSqp9C5GMgmpWnewlVn0PAoGAH37pxFR7QKG+Ki2x4PI3bcWmxxkrOzN9lS89YG0qovK+MPL152b0mn/Ei3Idq/qCAiyyoHwI8io0UmzBtLaO71ZU3zVZsfbof/qIVxFGneqaB3ubGdn1bSYmQvbBgrcdGaITdufltQLXp0y4YwbXRemzPRS1O4nP/GA6DYLBVIU=";
+
   @override
   void initState() {
     scrollController1;
@@ -142,7 +145,7 @@ class _DecryptPageState extends State<DecryptPage> {
 
   Future<List<File>> pickKeys() async {
     FilePickerResult? result =
-        await FilePicker.platform.pickFiles(allowMultiple: true);
+        await FilePicker.platform.pickFiles(allowMultiple: false);
 
     List<File> files = [];
 
@@ -171,8 +174,8 @@ class _DecryptPageState extends State<DecryptPage> {
     if (saveController.text == "" && tempString == "" && directory != "") {
       saveController.text = directory;
     }
-    //return _isVisible ? DecryptWidget(es) : DecryptSummary(requirments, es, cc);
-    return DecryptSummary(requirments, es, cc);
+    return _isVisible ? DecryptWidget(es) : DecryptSummary(requirments, es, cc);
+    //return DecryptSummary(requirments, es, cc);
   }
 
   AnimatedOpacity DecryptSummary(
@@ -670,7 +673,7 @@ class _DecryptPageState extends State<DecryptPage> {
                                     for (final i in _list) {
                                       es.aesDecrypt(
                                         i.path,
-                                        passwordController.text,
+                                        privKey,
                                         saveController.text,
                                         es.withoutDotAes(i.path)[2],
                                       );

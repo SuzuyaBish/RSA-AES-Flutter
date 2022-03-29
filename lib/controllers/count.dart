@@ -11,4 +11,12 @@ class CountController extends GetxController {
   void increment2() {
     count2++;
   }
+
+  void makeZero() {
+    count = 0.obs;
+  }
+
+  void makeZero2() {
+    count2 = 0.obs;
+  }
 }
