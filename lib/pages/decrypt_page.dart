@@ -1,19 +1,17 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:crypton/crypton.dart';
-import 'package:path/path.dart' as Path;
 import 'package:aes_app/controllers/count.dart';
-import 'package:aes_app/controllers/requirments.dart';
 import 'package:aes_app/services/encryption_service.dart';
-import 'package:fluent_ui/fluent_ui.dart';
-import 'package:desktop_drop/desktop_drop.dart';
 import 'package:cross_file/cross_file.dart';
-import 'package:get/get.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:percent_indicator/circular_percent_indicator.dart';
-import 'package:simple_ripple_animation/simple_ripple_animation.dart';
+import 'package:crypton/crypton.dart';
+import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:fluent_ui/fluent_ui.dart';
+import 'package:get/get.dart';
+import 'package:path/path.dart' as Path;
+import 'package:path_provider/path_provider.dart';
+import 'package:simple_ripple_animation/simple_ripple_animation.dart';
 
 class DecryptPage extends StatefulWidget {
   const DecryptPage({Key? key}) : super(key: key);
@@ -26,7 +24,7 @@ class _DecryptPageState extends State<DecryptPage> {
   final List<XFile> _list = [];
   Offset? offset;
   bool _dragging = false;
-  bool _isChecked = false;
+  final bool _isChecked = false;
   String directory = "";
   bool _tempIsVisible = true;
   bool _isVisible = true;
@@ -35,7 +33,7 @@ class _DecryptPageState extends State<DecryptPage> {
   final values = ["No", "Yes"];
   String currentDirectory = Directory.current.path;
   String tempString = "";
-  bool _useDefaultLocaiton = false;
+  final bool _useDefaultLocaiton = false;
   int count = 0;
   int actual = 0;
   List<File> keys = [];
@@ -202,7 +200,6 @@ class _DecryptPageState extends State<DecryptPage> {
   @override
   Widget build(BuildContext context) {
     EncryptionService es = EncryptionService();
-    Requirments requirments = Get.put(Requirments());
     CountController cc = Get.put(CountController());
     if (saveController.text == "" && tempString == "" && directory == "") {
       saveController.text = currentDirectory;
@@ -245,12 +242,12 @@ class _DecryptPageState extends State<DecryptPage> {
         aesKeyDirectory != "") {
       aesKeyController.text = aesKeyDirectory;
     }
-    return _isVisible ? DecryptWidget(es) : decryptSummary(requirments, es, cc);
+    return _isVisible ? DecryptWidget(es) : decryptSummary(es, cc);
     //return decryptSummary(requirments, es, cc);
   }
 
   AnimatedOpacity decryptSummary(
-      Requirments requirments, EncryptionService es, CountController cc) {
+      EncryptionService es, CountController cc) {
     return AnimatedOpacity(
       opacity: 1,
       duration: const Duration(seconds: 1),
@@ -954,7 +951,7 @@ class _DecryptPageState extends State<DecryptPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text(
-              "Drag and drop or press to decrypt files or folders",
+              "Drag and drop to decrypt files or folders",
               style: TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 50),

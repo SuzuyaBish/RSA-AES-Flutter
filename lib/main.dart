@@ -1,3 +1,4 @@
+import 'package:aes_app/globals.dart';
 import 'package:aes_app/pages/decrypt_page.dart';
 import 'package:aes_app/pages/encrypt_page.dart';
 import 'package:aes_app/pages/settings_page.dart';
@@ -48,11 +49,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return FluentApp(
       title: appTitle,
-      themeMode: ThemeMode.dark,
+      themeMode: ThemeMode.light,
       debugShowCheckedModeBanner: false,
       home: const MyHomePage(),
       darkTheme: ThemeData(
-        brightness: Brightness.dark,
+        scaffoldBackgroundColor: background,
+        brightness: Brightness.light,
         accentColor: Colors.red,
         visualDensity: VisualDensity.standard,
         focusTheme: FocusThemeData(
@@ -60,6 +62,8 @@ class MyApp extends StatelessWidget {
         ),
       ),
       theme: ThemeData(
+        scaffoldBackgroundColor: background,
+        brightness: Brightness.light,
         accentColor: Colors.red,
         visualDensity: VisualDensity.standard,
         focusTheme: FocusThemeData(
