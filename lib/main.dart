@@ -5,7 +5,6 @@ import 'package:aes_app/pages/settings_page.dart';
 import 'package:aes_app/pages/generate_keys.dart';
 import 'package:aes_app/utils/window_buttons.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:flutter_acrylic/flutter_acrylic.dart' as flutter_acrylic;
 
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/foundation.dart';
@@ -24,7 +23,6 @@ bool get isDesktop {
 void main() async {
   if (isDesktop) {
     WidgetsFlutterBinding.ensureInitialized();
-    await flutter_acrylic.Window.initialize();
     await WindowManager.instance.ensureInitialized();
     windowManager.waitUntilReadyToShow().then((_) async {
       await windowManager.setTitleBarStyle('hidden');
@@ -120,16 +118,16 @@ class _MyHomePageState extends State<MyHomePage> {
         items: [
           PaneItemSeparator(),
           PaneItem(
-            icon: const Icon(FluentIcons.generate),
-            title: const Text('RSA Key Generation'),
-          ),
-          PaneItem(
             icon: const Icon(FluentIcons.encryption),
             title: const Text('Encrypt'),
           ),
           PaneItem(
             icon: const Icon(FluentIcons.data_flow),
             title: const Text('Decrypt'),
+          ),
+          PaneItem(
+            icon: const Icon(FluentIcons.generate),
+            title: const Text('RSA Key Generation'),
           ),
         ],
         footerItems: [
@@ -143,9 +141,9 @@ class _MyHomePageState extends State<MyHomePage> {
       content: NavigationBody(
         index: index,
         children: const [
-          RSAKeyGeneratePage(),
           EncryptPage(),
           DecryptPage(),
+          RSAKeyGeneratePage(),
           SettingsPage(),
         ],
       ),

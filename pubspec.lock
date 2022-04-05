@@ -8,6 +8,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.2"
+  animated_text_kit:
+    dependency: "direct main"
+    description:
+      name: animated_text_kit
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "4.2.1"
   asn1lib:
     dependency: transitive
     description:
@@ -181,13 +188,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_acrylic:
-    dependency: "direct main"
-    description:
-      name: flutter_acrylic
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "1.0.0+2"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -219,13 +219,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "4.6.1"
-  glass_kit:
-    dependency: "direct main"
-    description:
-      name: glass_kit
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "2.0.1"
   intl:
     dependency: transitive
     description:
@@ -247,6 +240,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.0.1"
+  loading_indicator:
+    dependency: "direct main"
+    description:
+      name: loading_indicator
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "3.0.3"
   matcher:
     dependency: transitive
     description:

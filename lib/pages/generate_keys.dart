@@ -1,8 +1,10 @@
 import 'dart:io';
 
+import 'package:aes_app/globals.dart';
 import 'package:crypton/crypton.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:loading_indicator/loading_indicator.dart';
 import 'package:path/path.dart' as Path;
 import 'package:path_provider/path_provider.dart';
 
@@ -14,6 +16,8 @@ class RSAKeyGeneratePage extends StatefulWidget {
 }
 
 class _RSAKeyGeneratePageState extends State<RSAKeyGeneratePage> {
+  bool isMinimized = true;
+  bool isTransitioned = false;
   String currentDirectory = Directory.current.path;
   String directory = "";
   String tempString = "";
@@ -125,76 +129,193 @@ class _RSAKeyGeneratePageState extends State<RSAKeyGeneratePage> {
           padding: const EdgeInsets.all(12.0),
           child: Column(
             children: [
-              Container(
-                height: MediaQuery.of(context).size.height / 5,
-                width: MediaQuery.of(context).size.width,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: const Color(0xFf808080).withOpacity(0.35),
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                child: Column(
-                  children: const [
-                    Text(
-                      "Generation of the keys will only be used if you select to encyrpt with RSA, these keys are needed in order for the algorithm to work correctly.",
-                      style: TextStyle(color: Color(0xFFf06b76)),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 10),
-                    Text(
-                      "This step only needs to be done once although you can do it however many times you want.",
-                      style: TextStyle(color: Color(0xFFf06b76)),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 40),
-              Expanded(
-                child: Container(
-                  height: MediaQuery.of(context).size.height,
+              if (isMinimized) ...[
+                Container(
+                  height: MediaQuery.of(context).size.height / 8,
                   width: MediaQuery.of(context).size.width,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: const Color(0xFf808080).withOpacity(0.35),
+                    color: background,
                     borderRadius: BorderRadius.circular(5),
-                  ),
-                  child: Column(
-                    children: [
-                      TextBox(
-                        toolbarOptions: const ToolbarOptions(
-                          copy: true,
-                          cut: true,
-                          paste: true,
-                          selectAll: true,
-                        ),
-                        controller: pathController,
-                        header: "Save location:",
-                        headerStyle: const TextStyle(
-                          color: Color(0xFFf06b76),
-                        ),
-                        style: const TextStyle(fontSize: 14),
-                        suffix: IconButton(
-                          onPressed: () {
-                            pickFolder();
-                            setState(() {
-                              pathController.text = directory;
-                            });
-                          },
-                          icon: const Icon(
-                            FluentIcons.open_folder_horizontal,
-                            color: Color(0xFFf06b76),
-                          ),
-                        ),
-                        onSubmitted: (v) {
-                          setState(() {
-                            tempString = v;
-                          });
-                          pathController.text = tempString;
-                        },
+                    boxShadow: [
+                      BoxShadow(
+                        color: neuOne,
+                        offset: const Offset(5, 5),
+                        blurRadius: 12,
                       ),
-                      const SizedBox(height: 40),
-                      GestureDetector(
+                      BoxShadow(
+                        color: neuTwo,
+                        offset: const Offset(-5, -5),
+                        blurRadius: 12,
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          isMinimized = false;
+                        });
+                      },
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text("More Information: "),
+                          Icon(
+                            FluentIcons.chevron_down_med,
+                            color: redColor,
+                            size: 14,
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ] else ...[
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      isMinimized = true;
+                    });
+                  },
+                  child: Container(
+                    height: MediaQuery.of(context).size.height / 5,
+                    width: MediaQuery.of(context).size.width,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: background,
+                      borderRadius: BorderRadius.circular(5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: neuOne,
+                          offset: const Offset(5, 5),
+                          blurRadius: 12,
+                        ),
+                        BoxShadow(
+                          color: neuTwo,
+                          offset: const Offset(-5, -5),
+                          blurRadius: 12,
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: const [
+                        Text(
+                          "Generation of the keys will only be used if you select to encyrpt with RSA, these keys are needed in order for the algorithm to work correctly.",
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: 10),
+                        Text(
+                          "This step only needs to be done once although you can do it however many times you want.",
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 40),
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      height: MediaQuery.of(context).size.height,
+                      width: MediaQuery.of(context).size.width / 2.5,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: background,
+                        borderRadius: BorderRadius.circular(5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: neuOne,
+                            offset: const Offset(5, 5),
+                            blurRadius: 12,
+                          ),
+                          BoxShadow(
+                            color: neuTwo,
+                            offset: const Offset(-5, -5),
+                            blurRadius: 12,
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          TextBox(
+                            toolbarOptions: const ToolbarOptions(
+                              copy: true,
+                              cut: true,
+                              paste: true,
+                              selectAll: true,
+                            ),
+                            controller: pathController,
+                            header: "Save location:",
+                            headerStyle: const TextStyle(
+                              color: Color(0xFFf06b76),
+                            ),
+                            style: const TextStyle(fontSize: 12),
+                            suffix: IconButton(
+                              onPressed: () {
+                                pickFolder();
+                                setState(() {
+                                  pathController.text = directory;
+                                });
+                              },
+                              icon: const Icon(
+                                FluentIcons.open_folder_horizontal,
+                                color: Color(0xFFf06b76),
+                              ),
+                            ),
+                            onSubmitted: (v) {
+                              setState(() {
+                                tempString = v;
+                              });
+                              pathController.text = tempString;
+                            },
+                          ),
+                          const SizedBox(height: 40),
+                          if (showText) ...[
+                            const SizedBox(height: 40),
+                            const Text(
+                              "Your keys were created successfully!",
+                              style: TextStyle(
+                                color: Color(0xFFf06b76),
+                                fontSize: 16,
+                              ),
+                            ),
+                            const Text(
+                              "Keep them safe.",
+                              style: TextStyle(
+                                color: Color(0xFFf06b76),
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    Container(
+                      height: MediaQuery.of(context).size.height,
+                      width: MediaQuery.of(context).size.width / 2.5,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: background,
+                        borderRadius: BorderRadius.circular(5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: neuOne,
+                            offset: const Offset(5, 5),
+                            blurRadius: 12,
+                          ),
+                          BoxShadow(
+                            color: neuTwo,
+                            offset: const Offset(-5, -5),
+                            blurRadius: 12,
+                          ),
+                        ],
+                      ),
+                      child: GestureDetector(
                         onTap: () async {
                           await createFolder(pathController.text, "Keys");
 
@@ -293,37 +414,17 @@ class _RSAKeyGeneratePageState extends State<RSAKeyGeneratePage> {
                         },
                         child: Container(
                           padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF272727),
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: const Text(
-                            "Generate",
-                            style: TextStyle(
-                              color: Color(0xFFf06b76),
-                            ),
+                          child: LoadingIndicator(
+                            indicatorType: Indicator.ballClipRotateMultiple,
+                            colors: [redColor],
+                            strokeWidth: 3,
+                            backgroundColor: background,
+                            pathBackgroundColor: Colors.purple,
                           ),
                         ),
                       ),
-                      if (showText) ...[
-                        const SizedBox(height: 40),
-                        const Text(
-                          "Your keys were created successfully!",
-                          style: TextStyle(
-                            color: Color(0xFFf06b76),
-                            fontSize: 16,
-                          ),
-                        ),
-                        const Text(
-                          "Keep them safe.",
-                          style: TextStyle(
-                            color: Color(0xFFf06b76),
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ],

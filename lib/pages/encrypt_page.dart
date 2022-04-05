@@ -579,22 +579,22 @@ class _EncryptPageState extends State<EncryptPage> {
                         ),
                         height: MediaQuery.of(context).size.height / 3,
                         width: MediaQuery.of(context).size.width / 2,
-                        decoration: BoxDecoration(
-                          color: background,
-                          borderRadius: BorderRadius.circular(5),
-                          boxShadow: [
-                            BoxShadow(
-                              color: neuOne,
-                              offset: const Offset(5, 5),
-                              blurRadius: 12,
-                            ),
-                            BoxShadow(
-                              color: neuTwo,
-                              offset: const Offset(-5, -5),
-                              blurRadius: 12,
-                            ),
-                          ],
-                        ),
+                          decoration: BoxDecoration(
+                            color: background,
+                            borderRadius: BorderRadius.circular(5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: neuOne,
+                                offset: const Offset(5, 5),
+                                blurRadius: 12,
+                              ),
+                              BoxShadow(
+                                color: neuTwo,
+                                offset: const Offset(-5, -5),
+                                blurRadius: 12,
+                              ),
+                            ],
+                          ),
                         child: Padding(
                           padding: const EdgeInsets.all(12.0),
                           child: Column(
@@ -947,8 +947,8 @@ class _EncryptPageState extends State<EncryptPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text(
-              "Drag and drop to encrypt files or folders",
-              style: TextStyle(fontSize: 16),
+              "Drag and drop to encrypt files",
+              style: TextStyle(fontSize: 18),
             ),
             const SizedBox(height: 50),
             Center(
