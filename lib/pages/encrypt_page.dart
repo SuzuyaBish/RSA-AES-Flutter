@@ -39,7 +39,6 @@ class _EncryptPageState extends State<EncryptPage> {
   int count = 0;
   int actual = 0;
   String tempStrForPub = "";
-  bool validateKey = false;
 
   TextEditingController passwordController = TextEditingController();
   TextEditingController saveController = TextEditingController();
@@ -447,19 +446,8 @@ class _EncryptPageState extends State<EncryptPage> {
                                     onPressed: () async {
                                       await pickPubKey();
 
-                                      setState(() {
-                                        String temp = path_provider.basename(
-                                            theirPubKeyPathController.text);
-
-                                        String hold = "";
-                                        theirPubKeyPathController.text = hold;
-
-                                        if (temp == "pub.txt") {
-                                          hold = pubKeyDirectory;
-                                        }
-
-                                        print(hold);
-                                      });
+                                      theirPubKeyPathController.text =
+                                          pubKeyDirectory;
                                     },
                                     icon: Icon(
                                       FluentIcons.open_folder_horizontal,
@@ -510,11 +498,6 @@ class _EncryptPageState extends State<EncryptPage> {
                                 headerStyle: TextStyle(
                                   color: redColor,
                                 ),
-                                onChanged: (s) {
-                                  setState(() {
-                                    passwordController.text = s;
-                                  });
-                                },
                               ),
                               const SizedBox(height: 20),
                               Divider(
@@ -579,22 +562,22 @@ class _EncryptPageState extends State<EncryptPage> {
                         ),
                         height: MediaQuery.of(context).size.height / 3,
                         width: MediaQuery.of(context).size.width / 2,
-                          decoration: BoxDecoration(
-                            color: background,
-                            borderRadius: BorderRadius.circular(5),
-                            boxShadow: [
-                              BoxShadow(
-                                color: neuOne,
-                                offset: const Offset(5, 5),
-                                blurRadius: 12,
-                              ),
-                              BoxShadow(
-                                color: neuTwo,
-                                offset: const Offset(-5, -5),
-                                blurRadius: 12,
-                              ),
-                            ],
-                          ),
+                        decoration: BoxDecoration(
+                          color: background,
+                          borderRadius: BorderRadius.circular(5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: neuOne,
+                              offset: const Offset(5, 5),
+                              blurRadius: 12,
+                            ),
+                            BoxShadow(
+                              color: neuTwo,
+                              offset: const Offset(-5, -5),
+                              blurRadius: 12,
+                            ),
+                          ],
+                        ),
                         child: Padding(
                           padding: const EdgeInsets.all(12.0),
                           child: Column(
@@ -609,25 +592,27 @@ class _EncryptPageState extends State<EncryptPage> {
                               const SizedBox(height: 20),
                               Row(
                                 children: [
-                                  Text(
-                                    "RSA enabled: ",
-                                    style: TextStyle(
-                                      color: rsaEnabled == "Yes"
-                                          ? lightGreyFont
-                                          : lightGreyFont,
-                                      fontSize: 12,
+                                  if (rsaEnabled == "Yes") ...[
+                                    Text(
+                                      "RSA enabled: ",
+                                      style: TextStyle(
+                                        color: rsaEnabled == "Yes"
+                                            ? lightGreyFont
+                                            : lightGreyFont,
+                                        fontSize: 12,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Icon(
-                                    rsaEnabled == "Yes"
-                                        ? FluentIcons.accept
-                                        : FluentIcons.status_circle_error_x,
-                                    color: rsaEnabled == "Yes"
-                                        ? redColor
-                                        : const Color(0xFFD3D3D3)
-                                            .withOpacity(.80),
-                                  ),
+                                    const SizedBox(width: 10),
+                                    Icon(
+                                      rsaEnabled == "Yes"
+                                          ? FluentIcons.accept
+                                          : FluentIcons.status_circle_error_x,
+                                      color: rsaEnabled == "Yes"
+                                          ? redColor
+                                          : const Color(0xFFD3D3D3)
+                                              .withOpacity(.80),
+                                    ),
+                                  ],
                                 ],
                               ),
                               const SizedBox(height: 10),
@@ -637,21 +622,22 @@ class _EncryptPageState extends State<EncryptPage> {
                                     Text(
                                       "Public Key: ",
                                       style: TextStyle(
-                                        color: validateKey == false
-                                            ? redColor
-                                            : lightGreyFont,
+                                        color: theirPubKeyPathController
+                                                .text.isNotEmpty
+                                            ? lightGreyFont
+                                            : redColor,
                                         fontSize: 12,
                                       ),
                                     ),
                                     const SizedBox(width: 10),
                                     Icon(
-                                      validateKey == false
-                                          ? FluentIcons.status_circle_error_x
-                                          : FluentIcons.accept,
-                                      color: validateKey == false
-                                          ? const Color(0xFFD3D3D3)
-                                              .withOpacity(.80)
-                                          : redColor,
+                                      theirPubKeyPathController.text.isNotEmpty
+                                          ? FluentIcons.accept
+                                          : FluentIcons.status_circle_error_x,
+                                      color: theirPubKeyPathController
+                                              .text.isNotEmpty
+                                          ? redColor
+                                          : lightGreyFont,
                                     ),
                                   ],
                                 ),
@@ -742,7 +728,7 @@ class _EncryptPageState extends State<EncryptPage> {
                               rsaEnabled == "Yes" &&
                                   passwordController.text.isNotEmpty &&
                                   saveController.text.isNotEmpty &&
-                                  validateKey) {
+                                  theirPubKeyPathController.text.isNotEmpty) {
                             await createFolder(
                                 saveController.text, "EncryptedFiles");
 
@@ -900,13 +886,11 @@ class _EncryptPageState extends State<EncryptPage> {
                               ),
                             ],
                           ),
-                          child: const Center(
-                            child: Text(
-                              "Encrypt",
-                              style: TextStyle(
-                                fontSize: 30,
-                                fontWeight: FontWeight.bold,
-                              ),
+                          child: Center(
+                            child: Icon(
+                              FluentIcons.chevron_right,
+                              color: redColor,
+                              size: 40,
                             ),
                           ),
                         ),

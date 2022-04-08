@@ -48,8 +48,7 @@ dependencies:
   get: ^4.6.1
   percent_indicator: ^4.0.0
   crypton: ^2.0.3
-  loading_indicator: ^3.0.3
-  animated_text_kit: ^4.2.1
+  animate_icons: ^2.0.0
 
 
 

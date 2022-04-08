@@ -1,10 +1,10 @@
 import 'dart:io';
 
 import 'package:aes_app/globals.dart';
+import 'package:animate_icons/animate_icons.dart';
 import 'package:crypton/crypton.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:fluent_ui/fluent_ui.dart';
-import 'package:loading_indicator/loading_indicator.dart';
 import 'package:path/path.dart' as Path;
 import 'package:path_provider/path_provider.dart';
 
@@ -32,6 +32,7 @@ class _RSAKeyGeneratePageState extends State<RSAKeyGeneratePage> {
   String fileNames = "";
 
   TextEditingController pathController = TextEditingController();
+  late AnimateIconController c1;
 
   RSAKeypair rsaKeypair = RSAKeypair.fromRandom();
 
@@ -102,6 +103,7 @@ class _RSAKeyGeneratePageState extends State<RSAKeyGeneratePage> {
 
   @override
   void initState() {
+    c1 = AnimateIconController();
     super.initState();
   }
 
@@ -219,85 +221,188 @@ class _RSAKeyGeneratePageState extends State<RSAKeyGeneratePage> {
               Expanded(
                 child: Row(
                   children: [
-                    Container(
-                      height: MediaQuery.of(context).size.height,
-                      width: MediaQuery.of(context).size.width / 2.5,
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: background,
-                        borderRadius: BorderRadius.circular(5),
-                        boxShadow: [
-                          BoxShadow(
-                            color: neuOne,
-                            offset: const Offset(5, 5),
-                            blurRadius: 12,
-                          ),
-                          BoxShadow(
-                            color: neuTwo,
-                            offset: const Offset(-5, -5),
-                            blurRadius: 12,
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          TextBox(
-                            toolbarOptions: const ToolbarOptions(
-                              copy: true,
-                              cut: true,
-                              paste: true,
-                              selectAll: true,
+                    Expanded(
+                      child: Container(
+                        // height: MediaQuery.of(context).size.height,
+                        // width: MediaQuery.of(context).size.width,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: background,
+                          borderRadius: BorderRadius.circular(5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: neuOne,
+                              offset: const Offset(5, 5),
+                              blurRadius: 12,
                             ),
-                            controller: pathController,
-                            header: "Save location:",
-                            headerStyle: const TextStyle(
-                              color: Color(0xFFf06b76),
-                            ),
-                            style: const TextStyle(fontSize: 12),
-                            suffix: IconButton(
-                              onPressed: () {
-                                pickFolder();
-                                setState(() {
-                                  pathController.text = directory;
-                                });
-                              },
-                              icon: const Icon(
-                                FluentIcons.open_folder_horizontal,
-                                color: Color(0xFFf06b76),
-                              ),
-                            ),
-                            onSubmitted: (v) {
-                              setState(() {
-                                tempString = v;
-                              });
-                              pathController.text = tempString;
-                            },
-                          ),
-                          const SizedBox(height: 40),
-                          if (showText) ...[
-                            const SizedBox(height: 40),
-                            const Text(
-                              "Your keys were created successfully!",
-                              style: TextStyle(
-                                color: Color(0xFFf06b76),
-                                fontSize: 16,
-                              ),
-                            ),
-                            const Text(
-                              "Keep them safe.",
-                              style: TextStyle(
-                                color: Color(0xFFf06b76),
-                                fontSize: 16,
-                              ),
+                            BoxShadow(
+                              color: neuTwo,
+                              offset: const Offset(-5, -5),
+                              blurRadius: 12,
                             ),
                           ],
-                        ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TextBox(
+                              toolbarOptions: const ToolbarOptions(
+                                copy: true,
+                                cut: true,
+                                paste: true,
+                                selectAll: true,
+                              ),
+                              controller: pathController,
+                              header: "Save location:",
+                              headerStyle: const TextStyle(
+                                color: Color(0xFFf06b76),
+                              ),
+                              style: const TextStyle(fontSize: 12),
+                              suffix: IconButton(
+                                onPressed: () {
+                                  pickFolder();
+                                  setState(() {
+                                    pathController.text = directory;
+                                  });
+                                },
+                                icon: const Icon(
+                                  FluentIcons.open_folder_horizontal,
+                                  color: Color(0xFFf06b76),
+                                ),
+                              ),
+                              onSubmitted: (v) {
+                                setState(() {
+                                  tempString = v;
+                                });
+                                pathController.text = tempString;
+                              },
+                            ),
+                            const SizedBox(height: 30),
+                            Row(
+                              children: [
+                                const Text("Location: "),
+                                const SizedBox(width: 5),
+                                Text(
+                                  pathController.text,
+                                  style: TextStyle(
+                                    color: redColor,
+                                    fontSize: 12,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 15),
+                            Row(
+                              children: [
+                                const Text("Folder name: "),
+                                const SizedBox(width: 5),
+                                Text(
+                                  "Keys",
+                                  style: TextStyle(
+                                    color: redColor,
+                                    fontSize: 14,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 15),
+                            Row(
+                              children: [
+                                const Text("Private key: "),
+                                const SizedBox(width: 5),
+                                Text(
+                                  "priv.txt",
+                                  style: TextStyle(
+                                    color: redColor,
+                                    fontSize: 14,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Container(
+                                  padding: const EdgeInsets.all(5),
+                                  decoration: BoxDecoration(
+                                    color: background,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: neuOne,
+                                        offset: const Offset(2, 2),
+                                        blurRadius: 5,
+                                      ),
+                                      BoxShadow(
+                                        color: neuTwo,
+                                        offset: const Offset(-2, -2),
+                                        blurRadius: 5,
+                                      ),
+                                    ],
+                                  ),
+                                  child: Tooltip(
+                                    message:
+                                        "DO NOT CHANGE THE NAME OF THIS FILE",
+                                    child: Icon(
+                                      FluentIcons.important,
+                                      size: 14,
+                                      color: redColor,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 15),
+                            Row(
+                              children: [
+                                const Text("Public key: "),
+                                const SizedBox(width: 5),
+                                Text(
+                                  "pub.txt",
+                                  style: TextStyle(
+                                    color: redColor,
+                                    fontSize: 14,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Container(
+                                  padding: const EdgeInsets.all(5),
+                                  decoration: BoxDecoration(
+                                    color: background,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: neuOne,
+                                        offset: const Offset(2, 2),
+                                        blurRadius: 5,
+                                      ),
+                                      BoxShadow(
+                                        color: neuTwo,
+                                        offset: const Offset(-2, -2),
+                                        blurRadius: 5,
+                                      ),
+                                    ],
+                                  ),
+                                  child: Tooltip(
+                                    message:
+                                        "DO NOT CHANGE THE NAME OF THIS FILE",
+                                    child: Icon(
+                                      FluentIcons.important,
+                                      size: 14,
+                                      color: redColor,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(width: 15),
                     Container(
                       height: MediaQuery.of(context).size.height,
-                      width: MediaQuery.of(context).size.width / 2.5,
+                      width: MediaQuery.of(context).size.width / 5,
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: background,
@@ -414,12 +519,10 @@ class _RSAKeyGeneratePageState extends State<RSAKeyGeneratePage> {
                         },
                         child: Container(
                           padding: const EdgeInsets.all(12),
-                          child: LoadingIndicator(
-                            indicatorType: Indicator.ballClipRotateMultiple,
-                            colors: [redColor],
-                            strokeWidth: 3,
-                            backgroundColor: background,
-                            pathBackgroundColor: Colors.purple,
+                          child: Icon(
+                            FluentIcons.chevron_right,
+                            color: redColor,
+                            size: 30,
                           ),
                         ),
                       ),

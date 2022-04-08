@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:aes_app/controllers/count.dart';
+import 'package:aes_app/globals.dart';
 import 'package:aes_app/services/encryption_service.dart';
 import 'package:cross_file/cross_file.dart';
 import 'package:crypton/crypton.dart';
@@ -242,12 +243,11 @@ class _DecryptPageState extends State<DecryptPage> {
         aesKeyDirectory != "") {
       aesKeyController.text = aesKeyDirectory;
     }
-    return _isVisible ? DecryptWidget(es) : decryptSummary(es, cc);
-    //return decryptSummary(requirments, es, cc);
+    //return _isVisible ? DecryptWidget(es) : decryptSummary(es, cc);
+    return decryptSummary(es, cc);
   }
 
-  AnimatedOpacity decryptSummary(
-      EncryptionService es, CountController cc) {
+  AnimatedOpacity decryptSummary(EncryptionService es, CountController cc) {
     return AnimatedOpacity(
       opacity: 1,
       duration: const Duration(seconds: 1),
@@ -263,8 +263,20 @@ class _DecryptPageState extends State<DecryptPage> {
                       padding: const EdgeInsets.all(20),
                       width: MediaQuery.of(context).size.width / 2,
                       decoration: BoxDecoration(
-                        color: const Color(0xFf808080).withOpacity(0.35),
+                        color: background,
                         borderRadius: BorderRadius.circular(5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: neuOne,
+                            offset: const Offset(5, 5),
+                            blurRadius: 12,
+                          ),
+                          BoxShadow(
+                            color: neuTwo,
+                            offset: const Offset(-5, -5),
+                            blurRadius: 12,
+                          ),
+                        ],
                       ),
                       child: const Text(
                         "Files to decrypt ...",
@@ -280,8 +292,20 @@ class _DecryptPageState extends State<DecryptPage> {
                         height: MediaQuery.of(context).size.height / 2,
                         width: MediaQuery.of(context).size.width / 2,
                         decoration: BoxDecoration(
-                          color: const Color(0xFf808080).withOpacity(0.35),
+                          color: background,
                           borderRadius: BorderRadius.circular(5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: neuOne,
+                              offset: const Offset(5, 5),
+                              blurRadius: 12,
+                            ),
+                            BoxShadow(
+                              color: neuTwo,
+                              offset: const Offset(-5, -5),
+                              blurRadius: 12,
+                            ),
+                          ],
                         ),
                         child: Padding(
                           padding: const EdgeInsets.all(12.0),
@@ -324,8 +348,20 @@ class _DecryptPageState extends State<DecryptPage> {
                       height: MediaQuery.of(context).size.height / 2,
                       width: MediaQuery.of(context).size.width / 2,
                       decoration: BoxDecoration(
-                        color: const Color(0xFf808080).withOpacity(0.35),
+                        color: background,
                         borderRadius: BorderRadius.circular(5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: neuOne,
+                            offset: const Offset(5, 5),
+                            blurRadius: 12,
+                          ),
+                          BoxShadow(
+                            color: neuTwo,
+                            offset: const Offset(-5, -5),
+                            blurRadius: 12,
+                          ),
+                        ],
                       ),
                       child: SingleChildScrollView(
                         controller: scrollController2,
@@ -541,11 +577,6 @@ class _DecryptPageState extends State<DecryptPage> {
                                   headerStyle: const TextStyle(
                                     color: Color(0xFFf06b76),
                                   ),
-                                  onChanged: (s) {
-                                    setState(() {
-                                      passwordController.text = s;
-                                    });
-                                  },
                                 ),
                                 const SizedBox(height: 20),
                                 Divider(
@@ -606,8 +637,20 @@ class _DecryptPageState extends State<DecryptPage> {
                   height: MediaQuery.of(context).size.height,
                   width: MediaQuery.of(context).size.width / 2,
                   decoration: BoxDecoration(
-                    color: const Color(0xFf808080).withOpacity(0.35),
+                    color: background,
                     borderRadius: BorderRadius.circular(5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: neuOne,
+                        offset: const Offset(5, 5),
+                        blurRadius: 12,
+                      ),
+                      BoxShadow(
+                        color: neuTwo,
+                        offset: const Offset(-5, -5),
+                        blurRadius: 12,
+                      ),
+                    ],
                   ),
                   child: Padding(
                     padding:
@@ -997,22 +1040,24 @@ class _DecryptPageState extends State<DecryptPage> {
                   child: Container(
                     height: 260,
                     width: 260,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        stops: [0, 1],
-                        colors: [Color(0xFF2a2a2a), Color(0xFF232323)],
+                        stops: const [0, 1],
+                        colors: [gradientColorOne, gradientColorTwo],
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Color(0xFF101010),
-                          offset: Offset(3, 3),
+                          color: neuOne,
+                          offset: const Offset(5, 5),
+                          blurRadius: 12,
                         ),
                         BoxShadow(
-                          color: Color(0xFF3e3e3e),
-                          offset: Offset(-3, -3),
+                          color: neuTwo,
+                          offset: const Offset(-5, -5),
+                          blurRadius: 12,
                         ),
                       ],
                     ),
